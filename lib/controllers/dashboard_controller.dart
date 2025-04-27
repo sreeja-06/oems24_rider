@@ -99,7 +99,7 @@ class DashboardController extends GetxController {
       Get.snackbar(
         'Cannot Redeem',
         'Minimum redeemable amount is ₹1,000',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
       return;
     }
@@ -110,13 +110,13 @@ class DashboardController extends GetxController {
       Get.snackbar(
         'Success',
         'Amount will be credited within 24 hours',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
     } catch (e) {
       Get.snackbar(
         'Error',
         'Failed to process redemption',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
     }
   }
@@ -156,7 +156,7 @@ class DashboardController extends GetxController {
     Get.snackbar(
       'Earnings Updated',
       'Added ${formatCurrency(ride.estimatedFare)} to your earnings',
-      snackPosition: SnackPosition.BOTTOM,
+      snackPosition: SnackPosition.TOP,
     );
   }
 

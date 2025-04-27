@@ -33,6 +33,29 @@ class NotificationsController extends GetxController {
     _updateUnreadCount();
   }
 
+  void showSlideNotification(String title, String message, IconData icon) {
+    addNotification(title, message, icon);
+    
+    Get.snackbar(
+      title,
+      message,
+      icon: Icon(icon, color: Colors.white),
+      snackPosition: SnackPosition.TOP,
+      backgroundColor: const Color(0xFF007BFF),
+      colorText: Colors.white,
+      duration: const Duration(seconds: 4),
+      isDismissible: true,
+      dismissDirection: DismissDirection.horizontal,
+      forwardAnimationCurve: Curves.easeOutQuint,
+      reverseAnimationCurve: Curves.easeInQuint,
+      animationDuration: const Duration(milliseconds: 500),
+      margin: const EdgeInsets.all(8),
+      borderRadius: 8,
+      overlayBlur: 0,
+      onTap: (_) => Get.toNamed('/notifications'),
+    );
+  }
+
   void markAsRead(String id) {
     final index = notifications.indexWhere((n) => n.id == id);
     if (index != -1) {

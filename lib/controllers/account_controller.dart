@@ -122,7 +122,10 @@ class AccountController extends GetxController {
     Get.snackbar(
       'Success',
       'Profile updated successfully',
-      snackPosition: SnackPosition.BOTTOM,
+      snackPosition: SnackPosition.TOP,
+      backgroundColor: Colors.green.withOpacity(0.1),
+      colorText: Colors.green,
+      duration: const Duration(seconds: 3),
     );
   }
 

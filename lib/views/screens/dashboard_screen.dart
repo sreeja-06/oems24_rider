@@ -9,19 +9,44 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(DashboardController());
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth > 600;
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('Earnings Dashboard'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Earnings Dashboard'),
+            Obx(() => Text(
+              'Total Earnings: ${controller.formatCurrency(controller.totalEarnings.value)}',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[100],
+                fontWeight: FontWeight.w400,
+              ),
+            )),
+          ],
+        ),
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.history),
-            onPressed: () {
-              // TODO: Show earnings history
-            },
-          ),
+          Obx(() => IconButton(
+            icon: controller.isLoading.value 
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : const Icon(Icons.refresh),
+            tooltip: 'Refresh Dashboard',
+            onPressed: controller.isLoading.value 
+              ? null 
+              : () => controller.fetchDashboardData(),
+          )),
         ],
       ),
       body: Obx(() {
@@ -33,19 +58,41 @@ class DashboardScreen extends StatelessWidget {
           onRefresh: () => controller.fetchDashboardData(),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+            padding: EdgeInsets.symmetric(
+              horizontal: isTablet ? 32 : 16,
+              vertical: 24
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildTodayEarningsCard(controller),
-                const SizedBox(height: 24),
-                _buildQuickStats(controller),
+                if (isTablet) 
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: _buildTodayEarningsCard(controller)),
+                      const SizedBox(width: 24),
+                      Expanded(child: _buildQuickStats(controller)),
+                    ],
+                  )
+                else ...[
+                  _buildTodayEarningsCard(controller),
+                  const SizedBox(height: 24),
+                  _buildQuickStats(controller),
+                ],
                 const SizedBox(height: 24),
                 _buildRedeemSection(controller),
                 const SizedBox(height: 24),
                 _buildFilterSection(controller),
                 const SizedBox(height: 24),
-                _buildRecentTrips(controller),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    return _buildRecentTrips(
+                      controller,
+                      maxWidth: constraints.maxWidth,
+                      isTablet: isTablet,
+                    );
+                  }
+                ),
                 const SizedBox(height: 24),
                 _buildIncentivesSection(controller),
               ],
@@ -382,94 +429,128 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRecentTrips(DashboardController controller) {
+  Widget _buildRecentTrips(DashboardController controller, {required double maxWidth, required bool isTablet}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Recent Trips',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Recent Trips',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey,
+              ),
+            ),
+            TextButton(
+              onPressed: () => Get.toNamed('/ride-history'),
+              child: const Text('View All'),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: controller.recentTrips.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            final trip = controller.recentTrips[index];
-            return Card(
-              elevation: 2,
-              shadowColor: Colors.black12,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        isTablet 
+          ? GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: (maxWidth / 300).floor(),
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.5,
+              ),
+              itemCount: controller.recentTrips.length,
+              itemBuilder: (context, index) => _buildTripCard(controller, controller.recentTrips[index]),
+            )
+          : ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: controller.recentTrips.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              itemBuilder: (context, index) => _buildTripCard(controller, controller.recentTrips[index]),
+            ),
+      ],
+    );
+  }
+
+  Widget _buildTripCard(DashboardController controller, TripDetails trip) {
+    return Hero(
+      tag: 'trip-${trip.id}',
+      child: Card(
+        elevation: 2,
+        shadowColor: Colors.black12,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: InkWell(
+          onTap: () => Get.toNamed('/ride-history', arguments: trip.id),
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Trip #${trip.id}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          controller.formatCurrency(trip.earnings),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      'Trip #${trip.id}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        const Icon(Icons.access_time, size: 16, color: Colors.grey),
-                        const SizedBox(width: 4),
-                        Text(
-                          DateFormat('MMM d, h:mm a').format(trip.timestamp),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        const Icon(Icons.straighten, size: 16, color: Colors.grey),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${trip.distance.toStringAsFixed(1)} km',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        const Icon(Icons.timer, size: 16, color: Colors.grey),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${trip.duration} min',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
+                    Text(
+                      controller.formatCurrency(trip.earnings),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ],
                 ),
-              ),
-            );
-          },
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    const Icon(Icons.access_time, size: 16, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    Text(
+                      DateFormat('MMM d, h:mm a').format(trip.timestamp),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.straighten, size: 16, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${trip.distance.toStringAsFixed(1)} km',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Icon(Icons.timer, size: 16, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${trip.duration} min',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
-      ],
+      ),
     );
   }
 

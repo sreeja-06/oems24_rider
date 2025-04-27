@@ -16,7 +16,7 @@ class PermissionsController extends GetxController {
       Get.snackbar(
         'Location Required',
         'Location permission is required. Please enable it in settings.',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         duration: const Duration(seconds: 5),
         mainButton: TextButton(
           onPressed: () => openAppSettings(),
@@ -35,7 +35,7 @@ class PermissionsController extends GetxController {
       Get.snackbar(
         'Permission Required',
         'Location permission is required to use the app',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
       isLoading.value = false;
       return;
@@ -66,7 +66,7 @@ class PermissionsController extends GetxController {
       Get.snackbar(
         'Notifications Required',
         'Please enable notifications to receive ride requests',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         duration: const Duration(seconds: 5),
       );
     }
@@ -79,7 +79,7 @@ class PermissionsController extends GetxController {
       Get.snackbar(
         'Permission Required',
         'Location permission is required to proceed',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
       return;
     }
@@ -88,7 +88,7 @@ class PermissionsController extends GetxController {
       Get.snackbar(
         'Permission Required',
         'Notifications are required to receive ride requests',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
       return;
     }
