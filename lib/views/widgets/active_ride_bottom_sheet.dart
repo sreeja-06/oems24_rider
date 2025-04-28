@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../models/ride_request.dart';
 import '../../controllers/home_controller.dart';
+import '../../utils/format_util.dart';
 
 class ActiveRideBottomSheet extends StatelessWidget {
   final RideRequest ride;
   final String rideStatus;
-  final VoidCallback onArrivedAtPickup;
   final VoidCallback onStartRide;
   final VoidCallback onEndRide;
 
@@ -14,13 +14,16 @@ class ActiveRideBottomSheet extends StatelessWidget {
     Key? key,
     required this.ride,
     required this.rideStatus,
-    required this.onArrivedAtPickup,
     required this.onStartRide,
     required this.onEndRide,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    // Handle potentially empty values
+    final distanceInKm = ride.distanceInKm <= 0 ? 5.0 : ride.distanceInKm;
+    final durationInMins = ride.estimatedDurationInMins <= 0 ? 15 : ride.estimatedDurationInMins;
+    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: const BoxDecoration(
@@ -44,7 +47,7 @@ class ActiveRideBottomSheet extends StatelessWidget {
           _buildActionButton(),
           const SizedBox(height: 8),
           Text(
-            '${ride.distanceInKm.toStringAsFixed(1)} km • ${ride.estimatedDurationInMins} mins',
+            '${FormatUtil.formatDistance(distanceInKm)} • ${FormatUtil.formatDuration(durationInMins * 60)}',
             style: const TextStyle(
               color: Colors.grey,
               fontSize: 12,
@@ -94,11 +97,15 @@ class ActiveRideBottomSheet extends StatelessWidget {
   }
 
   Widget _buildLocationInfo() {
+    // Handle empty location strings
+    final pickupLocation = ride.pickupLocation.isEmpty ? 'Pickup Location' : ride.pickupLocation;
+    final dropLocation = ride.dropLocation.isEmpty ? 'Drop Location' : ride.dropLocation;
+    
     return Column(
       children: [
         _buildLocationRow(
           'Pickup',
-          ride.pickupLocation,
+          pickupLocation,
           Icons.location_on,
           Colors.green,
           true,
@@ -106,7 +113,7 @@ class ActiveRideBottomSheet extends StatelessWidget {
         const SizedBox(height: 8),
         _buildLocationRow(
           'Drop',
-          ride.dropLocation,
+          dropLocation,
           Icons.location_on,
           Colors.red,
           false,
@@ -122,6 +129,8 @@ class ActiveRideBottomSheet extends StatelessWidget {
     Color color,
     bool showDirections,
   ) {
+    final HomeController controller = Get.find<HomeController>();
+    
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -152,7 +161,7 @@ class ActiveRideBottomSheet extends StatelessWidget {
           if (showDirections && rideStatus == 'accepted')
             TextButton.icon(
               onPressed: () {
-                Get.find<HomeController>().onPickupLocationTap();
+                controller.onPickupLocationTap();
               },
               icon: const Icon(Icons.directions, color: Colors.blue),
               label: const Text('Directions'),
@@ -172,13 +181,26 @@ class ActiveRideBottomSheet extends StatelessWidget {
   Widget _buildActionButton() {
     switch (rideStatus) {
       case 'accepted':
-        return ElevatedButton(
-          onPressed: onArrivedAtPickup,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            minimumSize: const Size(double.infinity, 48),
+        // Don't show the "Arrived at Pickup" button here anymore
+        // Instead show a message prompting to use directions screen
+        return Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.orange.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
           ),
-          child: const Text('Arrived at Pickup'),
+          child: Row(
+            children: const [
+              Icon(Icons.info_outline, color: Colors.orange, size: 20),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Use the Directions screen to navigate and mark arrival at pickup location',
+                  style: TextStyle(fontSize: 14, color: Colors.black87),
+                ),
+              ),
+            ],
+          ),
         );
       case 'arrived':
         return ElevatedButton(

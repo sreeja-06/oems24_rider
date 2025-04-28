@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../models/ride_request.dart';
+import '../../utils/format_util.dart';
 
 class PaymentDialog extends StatefulWidget {
   final RideRequest ride;
@@ -18,11 +19,19 @@ class PaymentDialog extends StatefulWidget {
 
 class _PaymentDialogState extends State<PaymentDialog> {
   String selectedPaymentMethod = 'UPI';
+  late double fareAmount;
+
+  @override
+  void initState() {
+    super.initState();
+    // Ensure there's a minimum fare amount (50 rupees)
+    fareAmount = widget.ride.estimatedFare <= 0 ? 50.0 : widget.ride.estimatedFare;
+  }
 
   @override
   Widget build(BuildContext context) {
     // Generate a UPI payment link
-    final upiLink = 'upi://pay?pa=driver@upi&pn=Driver&am=${widget.ride.estimatedFare.toStringAsFixed(2)}&cu=INR';
+    final upiLink = 'upi://pay?pa=driver@upi&pn=Driver&am=${fareAmount.toStringAsFixed(2)}&cu=INR';
 
     return WillPopScope(
       onWillPop: () async => false,
@@ -63,7 +72,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                           ),
                         ),
                         Text(
-                          '₹${widget.ride.estimatedFare.toStringAsFixed(2)}',
+                          FormatUtil.formatCurrency(fareAmount),
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,

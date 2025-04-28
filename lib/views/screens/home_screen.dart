@@ -31,10 +31,11 @@ class HomeScreen extends StatelessWidget {
           },
           onReject: () {
             Get.back();
-            Get.snackbar(
-              'Request Rejected',
-              'You have rejected the ride request',
-              snackPosition: SnackPosition.TOP,
+            controller.showStandardSnackbar(
+              title: 'Request Rejected',
+              message: 'You have rejected the ride request',
+              backgroundColor: Colors.grey[700]!,
+              icon: Icons.cancel,
             );
           },
           timeoutSeconds: 15,
@@ -57,65 +58,71 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('OEMS24 Captain'),
-        actions: [
-          Obx(() => Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: badges.Badge(
-              position: badges.BadgePosition.topEnd(top: 4, end: 4),
-              showBadge: controller.unreadNotificationsCount.value > 0,
-              badgeContent: Text(
-                '${controller.unreadNotificationsCount.value}',
-                style: const TextStyle(color: Colors.white, fontSize: 10),
+    return Obx(() {
+      bool showAppBar = controller.currentIndex.value != 3 && 
+                        controller.currentIndex.value != 1 && 
+                        controller.currentIndex.value != 2; // Hide AppBar for Account, Ride History, and Dashboard tabs
+      
+      return Scaffold(
+        appBar: showAppBar ? AppBar(
+          title: const Text('OEMS24 Captain'),
+          actions: [
+            Obx(() => Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: badges.Badge(
+                position: badges.BadgePosition.topEnd(top: 4, end: 4),
+                showBadge: controller.unreadNotificationsCount.value > 0,
+                badgeContent: Text(
+                  '${controller.unreadNotificationsCount.value}',
+                  style: const TextStyle(color: Colors.white, fontSize: 10),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.notifications),
+                  onPressed: () => Get.toNamed('/notifications'),
+                ),
               ),
-              child: IconButton(
-                icon: const Icon(Icons.notifications),
-                onPressed: () => Get.toNamed('/notifications'),
-              ),
+            )),
+          ],
+        ) : null,
+        body: Obx(() {
+          switch (controller.currentIndex.value) {
+            case 0:
+              return _buildHomeContent();
+            case 1:
+              return const RideHistoryScreen();
+            case 2:
+              return const DashboardScreen();
+            case 3:
+              return const AccountScreen();
+            default:
+              return _buildHomeContent();
+          }
+        }),
+        bottomNavigationBar: Obx(() => BottomNavigationBar(
+          currentIndex: controller.currentIndex.value,
+          onTap: controller.changePage,
+          type: BottomNavigationBarType.fixed,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
             ),
-          )),
-        ],
-      ),
-      body: Obx(() {
-        switch (controller.currentIndex.value) {
-          case 0:
-            return _buildHomeContent();
-          case 1:
-            return const RideHistoryScreen();
-          case 2:
-            return const DashboardScreen();
-          case 3:
-            return const AccountScreen();
-          default:
-            return _buildHomeContent();
-        }
-      }),
-      bottomNavigationBar: Obx(() => BottomNavigationBar(
-        currentIndex: controller.currentIndex.value,
-        onTap: controller.changePage,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.directions_car),
-            label: 'Rides',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.attach_money),
-            label: 'Earnings',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-      )),
-    );
+            BottomNavigationBarItem(
+              icon: Icon(Icons.directions_car),
+              label: 'Rides',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.attach_money),
+              label: 'Earnings',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+          ],
+        )),
+      );
+    });
   }
 
   Widget _buildHomeContent() {
@@ -208,7 +215,6 @@ class HomeScreen extends StatelessWidget {
               return ActiveRideBottomSheet(
                 ride: controller.activeRide.value!,
                 rideStatus: controller.rideStatus.value,
-                onArrivedAtPickup: controller.onArrivedAtPickup,
                 onStartRide: controller.onStartRide,
                 onEndRide: controller.onEndRide,
               );

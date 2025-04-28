@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'OEMS24 Captain',
+      //title: 'OEMS24 Captain',
       debugShowCheckedModeBanner: false,
       theme: ThemeService.lightTheme.copyWith(
         textTheme: GoogleFonts.poppinsTextTheme(ThemeService.lightTheme.textTheme),

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as path;
 
 class ImagePickerWidget extends StatelessWidget {
   final String? imageUrl;
@@ -11,6 +12,7 @@ class ImagePickerWidget extends StatelessWidget {
   final bool enabled;
   final double size;
   final bool isLicenseImage;
+  final bool supportsPdf;
 
   const ImagePickerWidget({
     super.key,
@@ -21,7 +23,11 @@ class ImagePickerWidget extends StatelessWidget {
     this.enabled = true,
     this.size = 120,
     this.isLicenseImage = false,
+    this.supportsPdf = false,
   });
+
+  bool get isPdf => pickedImage != null && 
+    path.extension(pickedImage!.path).toLowerCase() == '.pdf';
 
   @override
   Widget build(BuildContext context) {
@@ -48,17 +54,15 @@ class ImagePickerWidget extends StatelessWidget {
                 width: 1,
               ),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(isLicenseImage ? 8 : size / 2),
-              child: _buildImage(),
-            ),
+            child: _buildContent(),
           ),
         ),
         if (enabled)
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Text(
-              'Tap to ${imageUrl != null || pickedImage != null ? 'change' : 'upload'}',
+              'Tap to ${imageUrl != null || pickedImage != null ? 'change' : 'upload'}' +
+              (supportsPdf ? ' (Image or PDF)' : ''),
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey[600],
@@ -69,8 +73,45 @@ class ImagePickerWidget extends StatelessWidget {
     );
   }
 
+  Widget _buildContent() {
+    if (pickedImage != null && isPdf) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(isLicenseImage ? 8 : size / 2),
+        child: Container(
+          color: Colors.grey[200],
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.picture_as_pdf,
+                color: Colors.red[700],
+                size: size * 0.4,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                path.basename(pickedImage!.path),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(isLicenseImage ? 8 : size / 2),
+        child: _buildImage(),
+      );
+    }
+  }
+
   Widget _buildImage() {
-    if (pickedImage != null) {
+    if (pickedImage != null && !isPdf) {
       return Image.file(
         File(pickedImage!.path),
         fit: BoxFit.cover,
@@ -96,8 +137,17 @@ class ImagePickerWidget extends StatelessWidget {
   }
 
   Widget _buildPlaceholder() {
+    IconData icon;
+    if (isLicenseImage) {
+      icon = Icons.credit_card;
+    } else if (supportsPdf) {
+      icon = Icons.file_upload;
+    } else {
+      icon = Icons.person;
+    }
+    
     return Icon(
-      isLicenseImage ? Icons.credit_card : Icons.person,
+      icon,
       size: size / 2,
       color: Colors.grey[400],
     );

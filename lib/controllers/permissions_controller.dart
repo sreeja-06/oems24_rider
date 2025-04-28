@@ -1,12 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'home_controller.dart';
 
 class PermissionsController extends GetxController {
-  final isLocationGranted = false.obs;
-  final isNotificationGranted = false.obs;
-  final currentPermissionIndex = 0.obs;
-  final isLoading = false.obs;
+  final RxInt currentPermissionIndex = 0.obs;
+  final RxBool isLocationGranted = false.obs;
+  final RxBool isNotificationGranted = false.obs;
+  final RxBool isLoading = false.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _checkPermissionStatus();
+  }
+
+  Future<void> _checkPermissionStatus() async {
+    final locationStatus = await Permission.location.status;
+    final notificationStatus = await Permission.notification.status;
+    
+    isLocationGranted.value = locationStatus.isGranted;
+    isNotificationGranted.value = notificationStatus.isGranted;
+    
+    if (isLocationGranted.value) {
+      currentPermissionIndex.value = 1;
+      if (isNotificationGranted.value) {
+        currentPermissionIndex.value = 2;
+      }
+    }
+  }
 
   Future<void> requestLocationPermission() async {
     isLoading.value = true;
@@ -42,10 +64,18 @@ class PermissionsController extends GetxController {
     }
 
     if (status.isGranted) {
-      // If location granted, automatically request notification permission
+      // Move to next permission if granted
       currentPermissionIndex.value = 1;
-      await Future.delayed(const Duration(milliseconds: 500)); // Small delay for smooth transition
-      await requestNotificationPermission();
+      // Small delay for smooth transition
+      await Future.delayed(const Duration(milliseconds: 500));
+    } else {
+      // Show message that location is required
+      Get.snackbar(
+        'Location Required',
+        'Location permission is required to use this app',
+        snackPosition: SnackPosition.TOP,
+        duration: const Duration(seconds: 5),
+      );
     }
     
     isLoading.value = false;
@@ -54,6 +84,22 @@ class PermissionsController extends GetxController {
   Future<void> requestNotificationPermission() async {
     isLoading.value = true;
     
+    // First check if permission is permanently denied
+    if (await Permission.notification.isPermanentlyDenied) {
+      Get.snackbar(
+        'Notifications Required',
+        'Notification permission is required. Please enable it in settings.',
+        snackPosition: SnackPosition.TOP,
+        duration: const Duration(seconds: 5),
+        mainButton: TextButton(
+          onPressed: () => openAppSettings(),
+          child: const Text('Open Settings'),
+        ),
+      );
+      isLoading.value = false;
+      return;
+    }
+    
     // Request notification permission
     final status = await Permission.notification.request();
     isNotificationGranted.value = status.isGranted;
@@ -61,6 +107,8 @@ class PermissionsController extends GetxController {
     if (status.isGranted) {
       // Only move to completion step if notification is granted
       currentPermissionIndex.value = 2;
+      // Small delay for smooth transition
+      await Future.delayed(const Duration(milliseconds: 500));
     } else {
       // Show message that notifications are required
       Get.snackbar(
@@ -92,6 +140,10 @@ class PermissionsController extends GetxController {
       );
       return;
     }
+    
+    // Ensure the home tab is selected when navigating to home
+    final HomeController homeController = Get.find<HomeController>();
+    homeController.currentIndex.value = 0; // Set to home tab (index 0)
     
     Get.offAllNamed('/home');
   }

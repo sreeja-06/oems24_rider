@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart' as location_marker;
 import '../../controllers/home_controller.dart';
 import '../widgets/otp_verification_dialog.dart';
+import '../../utils/format_util.dart';
 
 class DirectionsScreen extends StatelessWidget {
   final HomeController controller = Get.find<HomeController>();
@@ -13,10 +14,20 @@ class DirectionsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Handle potentially null or zero values
+    final pickupLocation = controller.activeRide.value?.pickupLocation ?? 'Pickup Location';
+    final pickupLat = controller.activeRide.value?.pickupLat ?? controller.currentLocation.value.latitude;
+    final pickupLng = controller.activeRide.value?.pickupLng ?? controller.currentLocation.value.longitude;
+    final distanceInKm = controller.activeRide.value?.distanceInKm ?? 0.0;
+    final durationInMins = controller.activeRide.value?.estimatedDurationInMins ?? 0;
+    
+    // Default values for display
+    final displayDistance = distanceInKm <= 0 ? '5.0 km' : '${distanceInKm.toStringAsFixed(1)} km';
+    final displayDuration = durationInMins <= 0 ? '15 min' : '$durationInMins min';
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Directions to Pickup'),
-        
       ),
       body: Stack(
         children: [
@@ -65,10 +76,7 @@ class DirectionsScreen extends StatelessWidget {
                 markers: [
                   if (controller.activeRide.value != null)
                     Marker(
-                      point: LatLng(
-                        controller.activeRide.value!.pickupLat,
-                        controller.activeRide.value!.pickupLng,
-                      ),
+                      point: LatLng(pickupLat, pickupLng),
                       width: 40,
                       height: 40,
                       child: const Icon(
@@ -101,7 +109,7 @@ class DirectionsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      controller.activeRide.value?.pickupLocation ?? '',
+                      pickupLocation,
                       style: const TextStyle(fontSize: 14),
                     ),
                     const SizedBox(height: 16),
@@ -119,7 +127,7 @@ class DirectionsScreen extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              '${controller.activeRide.value?.distanceInKm.toStringAsFixed(1)} km',
+                              displayDistance,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -138,7 +146,7 @@ class DirectionsScreen extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              '${controller.activeRide.value?.estimatedDurationInMins} min',
+                              displayDuration,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -148,23 +156,17 @@ class DirectionsScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    TextButton.icon(
-                      icon: const Icon(Icons.check_circle),
-                      label: const Text('Reached Pickup Location'),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
                       onPressed: () {
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (context) => OtpVerificationDialog(
-                            otp: controller.rideOtp.value,
-                            onVerify: controller.verifyOtp,
-                            onCancel: controller.cancelRide,
-                          ),
-                        );
+                        controller.onArrivedAtPickup();
+                        Get.back(); // Return to the home screen
                       },
-                      style: TextButton.styleFrom(
-                        alignment: Alignment.center,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        minimumSize: const Size(double.infinity, 48),
                       ),
+                      child: const Text('Arrived at Pickup'),
                     ),
                   ],
                 ),

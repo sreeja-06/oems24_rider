@@ -48,6 +48,20 @@ class _RideRequestDialogState extends State<RideRequestDialog> {
 
   @override
   Widget build(BuildContext context) {
+    // Handle empty pickup and drop locations
+    final pickupLocation = widget.request.pickupLocation.isEmpty 
+        ? 'Pickup Location' 
+        : widget.request.pickupLocation;
+    
+    final dropLocation = widget.request.dropLocation.isEmpty 
+        ? 'Drop Location'
+        : widget.request.dropLocation;
+
+    // Handle zero or negative values
+    final distanceInKm = widget.request.distanceInKm <= 0 ? 5.0 : widget.request.distanceInKm;
+    final durationInMins = widget.request.estimatedDurationInMins <= 0 ? 15 : widget.request.estimatedDurationInMins;
+    final fare = widget.request.estimatedFare <= 0 ? 150.0 : widget.request.estimatedFare;
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -104,7 +118,7 @@ class _RideRequestDialogState extends State<RideRequestDialog> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    widget.request.pickupLocation,
+                    pickupLocation,
                     style: const TextStyle(fontSize: 14),
                   ),
                 ),
@@ -117,7 +131,7 @@ class _RideRequestDialogState extends State<RideRequestDialog> {
                 const SizedBox(width: 8),
                 Expanded(
                     child: Text(
-                    widget.request.dropLocation,
+                    dropLocation,
                     style: const TextStyle(fontSize: 14),
                   ),
                 ),
@@ -131,7 +145,7 @@ class _RideRequestDialogState extends State<RideRequestDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      FormatUtil.formatCurrency(widget.request.estimatedFare),
+                      FormatUtil.formatCurrency(fare),
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -140,7 +154,7 @@ class _RideRequestDialogState extends State<RideRequestDialog> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${FormatUtil.formatDistance(widget.request.distanceInKm)} • ${FormatUtil.formatDuration(widget.request.estimatedDurationInMins * 60)}',
+                      '${FormatUtil.formatDistance(distanceInKm)} • ${FormatUtil.formatDuration(durationInMins * 60)}',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],

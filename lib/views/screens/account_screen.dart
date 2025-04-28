@@ -36,25 +36,12 @@ class AccountScreen extends GetView<AccountController> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ImagePickerWidget(
-                        imageUrl: controller.profileImageUrl.value,
-                        pickedImage: controller.newProfileImage.value,
-                        title: 'Profile Photo',
-                        onPickImage: controller.pickProfileImage,
-                        enabled: controller.isEditing.value,
-                      ),
-                      ImagePickerWidget(
-                        imageUrl: controller.licenseImageUrl.value,
-                        pickedImage: controller.newLicenseImage.value,
-                        title: 'License Photo',
-                        onPickImage: controller.pickLicenseImage,
-                        enabled: controller.isEditing.value,
-                        isLicenseImage: true,
-                      ),
-                    ],
+                  ImagePickerWidget(
+                    imageUrl: controller.profileImageUrl.value,
+                    pickedImage: controller.newProfileImage.value,
+                    title: 'Profile Photo',
+                    onPickImage: controller.pickProfileImage,
+                    enabled: controller.isEditing.value,
                   ),
                   const SizedBox(height: 24),
                   CustomTextField(
@@ -155,10 +142,38 @@ class AccountScreen extends GetView<AccountController> {
                     enabled: controller.isEditing.value,
                   ),
                   const SizedBox(height: 16),
+                  Obx(() => Visibility(
+                    visible: controller.needsVehicleRegImage(),
+                    child: Column(
+                      children: [
+                        ImagePickerWidget(
+                          imageUrl: controller.vehicleRegImageUrl.value,
+                          pickedImage: controller.newVehicleRegImage.value,
+                          title: 'Vehicle Registration Certificate',
+                          onPickImage: controller.pickVehicleRegImage,
+                          enabled: controller.isEditing.value,
+                          isLicenseImage: true,
+                          supportsPdf: true,
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
+                  )),
                   CustomTextField(
                     controller: controller.licenseNumberController,
                     label: 'License Number',
                     enabled: controller.isEditing.value,
+                    validator: controller.validateLicenseNumber,
+                  ),
+                  const SizedBox(height: 16),
+                  ImagePickerWidget(
+                    imageUrl: controller.licenseImageUrl.value,
+                    pickedImage: controller.newLicenseImage.value,
+                    title: 'License Photo',
+                    onPickImage: controller.pickLicenseImage,
+                    enabled: controller.isEditing.value,
+                    isLicenseImage: true,
+                    supportsPdf: true,
                   ),
                   const SizedBox(height: 24),
                   Row(

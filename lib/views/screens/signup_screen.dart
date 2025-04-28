@@ -19,22 +19,11 @@ class SignupScreen extends GetView<SignupController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Obx(() => ImagePickerWidget(
-                  pickedImage: controller.profileImage.value,
-                  title: 'Profile Photo',
-                  onPickImage: controller.pickProfileImage,
-                )),
-                Obx(() => ImagePickerWidget(
-                  pickedImage: controller.licenseImage.value,
-                  title: 'License Photo',
-                  onPickImage: controller.pickLicenseImage,
-                  isLicenseImage: true,
-                )),
-              ],
-            ),
+            Obx(() => ImagePickerWidget(
+              pickedImage: controller.profileImage.value,
+              title: 'Profile Photo',
+              onPickImage: controller.pickProfileImage,
+            )),
             const SizedBox(height: 24),
             Obx(() => CustomTextField(
               label: 'Full Name',
@@ -120,10 +109,35 @@ class SignupScreen extends GetView<SignupController> {
               errorText: controller.validateVehicleNumber(controller.vehicleNumber.value),
             )),
             const SizedBox(height: 16),
-            CustomTextField(
-              label: 'License Number (Optional)',
+            Obx(() => Visibility(
+              visible: controller.vehicleType.value != 'e-bike',
+              child: Column(
+                children: [
+                  ImagePickerWidget(
+                    pickedImage: controller.vehicleRegImage.value,
+                    title: 'Vehicle Registration Certificate',
+                    onPickImage: controller.pickVehicleRegImage,
+                    isLicenseImage: true,
+                    supportsPdf: true,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            )),
+            Obx(() => CustomTextField(
+              label: 'License Number',
               onChanged: (value) => controller.licenseNumber.value = value,
-            ),
+              validator: controller.validateLicenseNumber,
+              errorText: controller.validateLicenseNumber(controller.licenseNumber.value),
+            )),
+            const SizedBox(height: 16),
+            Obx(() => ImagePickerWidget(
+              pickedImage: controller.licenseImage.value,
+              title: 'License Photo',
+              onPickImage: controller.pickLicenseImage,
+              isLicenseImage: true,
+              supportsPdf: true,
+            )),
             const SizedBox(height: 16),
             Obx(() => CustomTextField(
               label: 'Password',

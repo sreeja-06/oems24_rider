@@ -23,7 +23,7 @@ class DashboardScreen extends StatelessWidget {
               'Total Earnings: ${controller.formatCurrency(controller.totalEarnings.value)}',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[100],
+                color: Colors.black,
                 fontWeight: FontWeight.w400,
               ),
             )),
@@ -81,8 +81,6 @@ class DashboardScreen extends StatelessWidget {
                 ],
                 const SizedBox(height: 24),
                 _buildRedeemSection(controller),
-                const SizedBox(height: 24),
-                _buildFilterSection(controller),
                 const SizedBox(height: 24),
                 LayoutBuilder(
                   builder: (context, constraints) {
@@ -371,60 +369,6 @@ class DashboardScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildFilterSection(DashboardController controller) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Filter Earnings',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _buildFilterChip('All Services', true),
-            _buildFilterChip('Cab', false),
-            _buildFilterChip('Delivery', false),
-            _buildFilterChip('Rentals', false),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _buildFilterChip('Orders', true),
-            _buildFilterChip('Tips', false),
-            _buildFilterChip('Referrals', false),
-            _buildFilterChip('Incentives', false),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFilterChip(String label, bool selected) {
-    return FilterChip(
-      selected: selected,
-      label: Text(label),
-      onSelected: (bool value) {
-        // TODO: Implement filter logic
-      },
-      selectedColor: Colors.blue.withOpacity(0.2),
-      checkmarkColor: Colors.blue,
-      backgroundColor: Colors.grey[200],
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
       ),
     );
   }

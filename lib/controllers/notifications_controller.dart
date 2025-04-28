@@ -52,6 +52,7 @@ class NotificationsController extends GetxController {
       margin: const EdgeInsets.all(8),
       borderRadius: 8,
       overlayBlur: 0,
+      snackStyle: SnackStyle.FLOATING,
       onTap: (_) => Get.toNamed('/notifications'),
     );
   }

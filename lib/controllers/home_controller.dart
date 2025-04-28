@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart';
@@ -28,6 +29,31 @@ class HomeController extends GetxController {
   StreamSubscription<geo.Position>? positionStream;
   final currentIndex = 0.obs;
   
+  // Helper method for standardized Snackbar styling
+  void showStandardSnackbar({
+    required String title,
+    required String message,
+    Color backgroundColor = const Color(0xFF007BFF),
+    Color textColor = Colors.white,
+    Duration duration = const Duration(seconds: 3),
+    IconData? icon,
+    SnackPosition position = SnackPosition.TOP,
+  }) {
+    Get.snackbar(
+      title,
+      message,
+      snackPosition: position,
+      backgroundColor: backgroundColor,
+      colorText: textColor,
+      duration: duration,
+      animationDuration: const Duration(milliseconds: 500),
+      snackStyle: SnackStyle.FLOATING,
+      margin: const EdgeInsets.all(8),
+      borderRadius: 8,
+      icon: icon != null ? Icon(icon, color: textColor) : null,
+    );
+  }
+  
   @override
   void onInit() {
     super.onInit();
@@ -53,10 +79,11 @@ class HomeController extends GetxController {
 
       serviceEnabled = await geo.Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        Get.snackbar(
-          'Location Service Disabled',
-          'Please enable location services to use this app',
-          snackPosition: SnackPosition.TOP,
+        showStandardSnackbar(
+          title: 'Location Service Disabled',
+          message: 'Please enable location services to use this app',
+          backgroundColor: Colors.red,
+          icon: Icons.location_off,
         );
         return;
       }
@@ -65,20 +92,22 @@ class HomeController extends GetxController {
       if (permission == geo.LocationPermission.denied) {
         permission = await geo.Geolocator.requestPermission();
         if (permission == geo.LocationPermission.denied) {
-          Get.snackbar(
-            'Location Permission Denied',
-            'Location permissions are required to use this app',
-            snackPosition: SnackPosition.TOP,
+          showStandardSnackbar(
+            title: 'Location Permission Denied',
+            message: 'Location permissions are required to use this app',
+            backgroundColor: Colors.red,
+            icon: Icons.location_off,
           );
           return;
         }
       }
 
       if (permission == geo.LocationPermission.deniedForever) {
-        Get.snackbar(
-          'Location Permission Denied Forever',
-          'Location permissions are required to use this app. Please enable them in settings.',
-          snackPosition: SnackPosition.TOP,
+        showStandardSnackbar(
+          title: 'Location Permission Denied Forever',
+          message: 'Location permissions are required to use this app. Please enable them in settings.',
+          backgroundColor: Colors.red,
+          icon: Icons.location_off,
         );
         return;
       }
@@ -108,51 +137,9 @@ class HomeController extends GetxController {
           locationAccuracy.value = position.accuracy;
           update();
         }
-      }, onError: (error) {
-        print('Location stream error: $error');
-        // Only show error notification if there's an actual error
-        if (error is geo.LocationServiceDisabledException) {
-          Get.snackbar(
-            'Location Error',
-            'Location services are disabled. Please enable them to continue.',
-            snackPosition: SnackPosition.TOP,
-          );
-        } else if (error is geo.PermissionDeniedException) {
-          Get.snackbar(
-            'Location Error',
-            'Location permissions are required. Please grant them to continue.',
-            snackPosition: SnackPosition.TOP,
-          );
-        } else {
-          Get.snackbar(
-            'Location Error',
-            'Failed to get location updates. Please check your GPS signal.',
-            snackPosition: SnackPosition.TOP,
-          );
-        }
       });
     } catch (e) {
       print('Error initializing location: $e');
-      // Only show error notification if there's an actual error
-      if (e is geo.LocationServiceDisabledException) {
-        Get.snackbar(
-          'Location Error',
-          'Location services are disabled. Please enable them to continue.',
-          snackPosition: SnackPosition.TOP,
-        );
-      } else if (e is geo.PermissionDeniedException) {
-        Get.snackbar(
-          'Location Error',
-          'Location permissions are required. Please grant them to continue.',
-          snackPosition: SnackPosition.TOP,
-        );
-      } else {
-        Get.snackbar(
-          'Location Error',
-          'Failed to initialize location services',
-          snackPosition: SnackPosition.TOP,
-        );
-      }
     }
   }
 
@@ -169,53 +156,78 @@ class HomeController extends GetxController {
 
   void toggleOnlineStatus() {
     if (activeRide.value != null && rideStatus.value != 'completed') {
-      Get.snackbar(
-        'Cannot go offline',
-        'You have an active ride in progress',
-        snackPosition: SnackPosition.TOP,
+      showStandardSnackbar(
+        title: 'Cannot go offline',
+        message: 'You have an active ride in progress',
+        backgroundColor: Colors.red.withOpacity(0.9),
+        icon: Icons.error_outline,
       );
       return;
     }
     
     // Show notification before changing status
-    Get.snackbar(
-      'Status Updating',
-      isOnline.value ? 'Going offline...' : 'Going online...',
-      snackPosition: SnackPosition.TOP,
-      duration: const Duration(milliseconds: 500),
+    showStandardSnackbar(
+      title: 'Status Updating',
+      message: isOnline.value ? 'Going offline...' : 'Going online...',
+      duration: const Duration(milliseconds: 800),
+      icon: isOnline.value ? Icons.offline_bolt : Icons.online_prediction,
     );
     
     // Change status after a short delay
     Future.delayed(const Duration(milliseconds: 500), () {
-    isOnline.value = !isOnline.value;
-    Get.snackbar(
-      'Status Updated',
-      isOnline.value ? 'You are now online' : 'You are now offline',
-      snackPosition: SnackPosition.TOP,
-    );
+      isOnline.value = !isOnline.value;
+      showStandardSnackbar(
+        title: 'Status Changed',
+        message: isOnline.value ? 'You are now online' : 'You are now offline',
+        backgroundColor: isOnline.value ? Colors.green : Colors.grey[700]!,
+        icon: isOnline.value ? Icons.online_prediction : Icons.offline_bolt,
+      );
     });
   }
 
   void _showMockRideRequest() {
+    // Generate a sample ride request with realistic data
+    final currentLat = currentLocation.value.latitude;
+    final currentLng = currentLocation.value.longitude;
+    
+    // Generate nearby coordinates for pickup (roughly within 1-3 km)
+    final pickupLat = currentLat + (0.01 * (0.5 - Random().nextDouble()));
+    final pickupLng = currentLng + (0.01 * (0.5 - Random().nextDouble()));
+    
+    // Generate coordinates for drop-off (roughly within 3-8 km from pickup)
+    final dropLat = pickupLat + (0.03 * (0.5 - Random().nextDouble()));
+    final dropLng = pickupLng + (0.03 * (0.5 - Random().nextDouble()));
+    
+    // Calculate rough distance in km (simplified)
+    final distanceInKm = 5.2; // This would be calculated from the coordinates in a real app
+    
+    // Estimate duration based on distance (assuming average speed of 20 km/h)
+    final estimatedDurationInMins = (distanceInKm / 20 * 60).round();
+    
+    // Estimate fare based on distance (base fare + per km charge)
+    final baseFare = 50.0;
+    final perKmCharge = 12.0;
+    final estimatedFare = baseFare + (distanceInKm * perKmCharge);
+    
     final mockRequest = RideRequest(
-      id: '123',
+      id: '${DateTime.now().millisecondsSinceEpoch}',
       userId: 'user123',
-      customerName: 'John Doe',
+      customerName: 'John Doe', 
       customerPhone: '+91 98765 43210',
       pickupLocation: 'MG Road Metro Station',
       dropLocation: 'Indiranagar Metro Station',
-      pickupLat: 12.9716,
-      pickupLng: 77.5946,
-      dropLat: 12.9816,
-      dropLng: 77.5975,
-      pickupAddress: 'MG Road Metro Station',
-      dropAddress: 'Indiranagar Metro Station',
-      distance: 5200.0,
-      distanceInKm: 5.2,
-      estimatedDuration: 900,
-      estimatedDurationInMins: 15,
-      estimatedFare: 250.0,
-      estimatedFareInMins: 250.0,
+      pickupLat: pickupLat,
+      pickupLng: pickupLng,
+      dropLat: dropLat,
+      dropLng: dropLng,
+      pickupAddress: 'MG Road Metro Station, Bengaluru',
+      dropAddress: 'Indiranagar Metro Station, Bengaluru',
+      distance: distanceInKm * 1000, // Convert to meters
+      distanceInKm: distanceInKm,
+      estimatedDuration: estimatedDurationInMins * 60, // Convert to seconds
+      estimatedDurationInMins: estimatedDurationInMins,
+      estimatedFare: estimatedFare,
+      estimatedFareInMins: estimatedFare,
       paymentMethod: 'CASH',
       createdAt: DateTime.now(),
       notes: '',
@@ -226,17 +238,18 @@ class HomeController extends GetxController {
       barrierDismissible: false,
       builder: (context) => RideRequestDialog(
         request: mockRequest,
-        timeoutSeconds: requestTimeoutSeconds, // Changed from secondsRemaining to timeoutSeconds
+        timeoutSeconds: requestTimeoutSeconds,
         onAccept: () {
           Navigator.of(context).pop();
           handleAcceptRide(mockRequest);
         },
         onReject: () {
           Navigator.of(context).pop();
-          Get.snackbar(
-            'Request Rejected',
-            'You have rejected the ride request',
-            snackPosition: SnackPosition.TOP,
+          showStandardSnackbar(
+            title: 'Request Rejected',
+            message: 'You have rejected the ride request',
+            backgroundColor: Colors.grey[700]!,
+            icon: Icons.cancel,
           );
         },
       ),
@@ -249,11 +262,10 @@ class HomeController extends GetxController {
     activeRide.value = request;
     rideStatus.value = 'accepted';
     
-    Get.snackbar(
-      'Ride Accepted',
-      'Navigate to pickup location',
-      snackPosition: SnackPosition.TOP,
-      duration: const Duration(seconds: 3),
+    showStandardSnackbar(
+      title: 'Ride Accepted',
+      message: 'Navigate to pickup location',
+      icon: Icons.directions_car,
     );
   }
 
@@ -263,10 +275,11 @@ class HomeController extends GetxController {
       Get.back(closeOverlays: true); // Close any remaining dialogs
       onStartRide();
     } else {
-      Get.snackbar(
-        'Invalid OTP',
-        'Please enter the correct OTP',
-        snackPosition: SnackPosition.TOP,
+      showStandardSnackbar(
+        title: 'Invalid OTP',
+        message: 'Please enter the correct OTP',
+        backgroundColor: Colors.red,
+        icon: Icons.error,
       );
       // Reopen OTP dialog
       showDialog(
@@ -290,10 +303,11 @@ class HomeController extends GetxController {
 
   void onArrivedAtPickup() {
     rideStatus.value = 'arrived';
-    Get.snackbar(
-      'Arrived at Pickup',
-      'Waiting for passenger',
-      snackPosition: SnackPosition.TOP,
+    showStandardSnackbar(
+      title: 'Arrived at Pickup',
+      message: 'Waiting for passenger',
+      backgroundColor: Colors.blue,
+      icon: Icons.location_on,
     );
     
     showDialog(
@@ -309,10 +323,11 @@ class HomeController extends GetxController {
 
   void onStartRide() {
     rideStatus.value = 'started';
-    Get.snackbar(
-      'Ride Started',
-      'Navigate to drop location',
-      snackPosition: SnackPosition.TOP,
+    showStandardSnackbar(
+      title: 'Ride Started',
+      message: 'Navigate to drop location',
+      backgroundColor: Colors.green,
+      icon: Icons.play_arrow,
     );
   }
 
@@ -369,19 +384,19 @@ class HomeController extends GetxController {
           final rideHistoryController = Get.find<RideHistoryController>();
           rideHistoryController.addRide(rideHistory);
     
-    // Show ride summary
-    Get.snackbar(
-      'Ride Completed',
-            'Fare: ₹${activeRide.value!.estimatedFare.toStringAsFixed(2)}',
-      snackPosition: SnackPosition.TOP,
-      duration: const Duration(seconds: 5),
-    );
+          // Show ride summary
+          showStandardSnackbar(
+            title: 'Ride Completed',
+            message: 'Fare: ₹${activeRide.value!.estimatedFare.toStringAsFixed(2)}',
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 5),
+            icon: Icons.check_circle,
+          );
 
           // Reset all states to initial values
-    activeRide.value = null;
-    rideStatus.value = 'none';
+          activeRide.value = null;
+          rideStatus.value = 'none';
           rideOtp.value = '';
-          isOnline.value = false; // Reset online status to offline
           
           // Cancel any active timers
           otpTimer?.cancel();

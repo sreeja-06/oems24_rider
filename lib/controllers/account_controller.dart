@@ -15,8 +15,10 @@ class AccountController extends GetxController {
   final isEditing = false.obs;
   final profileImageUrl = RxnString();
   final licenseImageUrl = RxnString();
+  final vehicleRegImageUrl = RxnString();
   final Rxn<XFile> newProfileImage = Rxn<XFile>();
   final Rxn<XFile> newLicenseImage = Rxn<XFile>();
+  final Rx<XFile?> newVehicleRegImage = Rx<XFile?>(null);
 
   // Form controllers
   final formKey = GlobalKey<FormState>();
@@ -49,6 +51,7 @@ class AccountController extends GetxController {
     licenseNumber.value = 'DL98765432102021';
     profileImageUrl.value = 'https://example.com/profile.jpg'; // Mock URL
     licenseImageUrl.value = 'https://example.com/license.jpg'; // Mock URL
+    vehicleRegImageUrl.value = 'https://example.com/vehicle_reg.jpg'; // Mock URL
     
     // Set controller values
     nameController.text = name.value;
@@ -59,6 +62,17 @@ class AccountController extends GetxController {
     licenseNumberController.text = licenseNumber.value;
     
     isLoading.value = false;
+  }
+
+  bool needsVehicleRegImage() {
+    return vehicleType.value != 'e-bike';
+  }
+
+  String? validateLicenseNumber(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'License number is required';
+    }
+    return null;
   }
 
   Future<void> pickProfileImage() async {
@@ -79,12 +93,7 @@ class AccountController extends GetxController {
 
   Future<void> pickLicenseImage() async {
     try {
-      final XFile? image = await _picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 2000,
-        maxHeight: 2000,
-        imageQuality: 90,
-      );
+      final XFile? image = await _picker.pickMedia();
       if (image != null) {
         newLicenseImage.value = image;
       }
@@ -93,8 +102,39 @@ class AccountController extends GetxController {
     }
   }
 
+  Future<void> pickVehicleRegImage() async {
+    try {
+      final XFile? image = await _picker.pickMedia();
+      if (image != null) {
+        newVehicleRegImage.value = image;
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to pick vehicle registration image');
+    }
+  }
+
+  bool validateInputs() {
+    if (!formKey.currentState!.validate()) {
+      return false;
+    }
+    
+    // Check for required license number
+    if (licenseNumberController.text.isEmpty) {
+      Get.snackbar('Error', 'License number is required');
+      return false;
+    }
+    
+    // Check for vehicle registration if required
+    if (needsVehicleRegImage() && vehicleRegImageUrl.value == null && newVehicleRegImage.value == null) {
+      Get.snackbar('Error', 'Vehicle registration certificate is required');
+      return false;
+    }
+    
+    return true;
+  }
+
   Future<void> updateProfile() async {
-    if (!formKey.currentState!.validate()) return;
+    if (!validateInputs()) return;
 
     isLoading.value = true;
     // TODO: Implement API call to update profile
@@ -109,6 +149,11 @@ class AccountController extends GetxController {
     if (newLicenseImage.value != null) {
       // Mock upload
       licenseImageUrl.value = 'https://example.com/new_license.jpg';
+    }
+    
+    if (newVehicleRegImage.value != null) {
+      // Mock upload
+      vehicleRegImageUrl.value = 'https://example.com/new_vehicle_reg.jpg';
     }
     
     name.value = nameController.text;
@@ -135,6 +180,7 @@ class AccountController extends GetxController {
       // Reset new images if editing is cancelled
       newProfileImage.value = null;
       newLicenseImage.value = null;
+      newVehicleRegImage.value = null;
     }
   }
 
