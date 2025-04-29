@@ -8,6 +8,7 @@ import '../views/screens/home_screen.dart';
 import '../views/screens/ride_history_screen.dart';
 import '../views/screens/dashboard_screen.dart';
 import '../views/screens/account_screen.dart';
+import '../views/screens/drop_direction_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -19,6 +20,7 @@ class AppRoutes {
   static const String rideHistory = '/ride-history';
   static const String dashboard = '/dashboard';
   static const String account = '/account';
+  static const String dropDirection = '/drop-direction';
 
   static final routes = [
     GetPage(name: splash, page: () => const SplashScreen()),
@@ -30,5 +32,6 @@ class AppRoutes {
     GetPage(name: rideHistory, page: () => const RideHistoryScreen()),
     GetPage(name: dashboard, page: () => const DashboardScreen()),
     GetPage(name: account, page: () => const AccountScreen()),
+    GetPage(name: dropDirection, page: () => DropDirectionScreen()),
   ];
 }

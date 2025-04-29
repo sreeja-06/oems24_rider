@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../models/ride_request.dart';
 import '../../controllers/home_controller.dart';
 import '../../utils/format_util.dart';
+import '../../constants/app_constants.dart';
 
 class ActiveRideBottomSheet extends StatelessWidget {
   final RideRequest ride;
@@ -49,7 +50,7 @@ class ActiveRideBottomSheet extends StatelessWidget {
           Text(
             '${FormatUtil.formatDistance(distanceInKm)} • ${FormatUtil.formatDuration(durationInMins * 60)}',
             style: const TextStyle(
-              color: Colors.grey,
+              color: Colors.black54,
               fontSize: 12,
             ),
           ),
@@ -65,19 +66,19 @@ class ActiveRideBottomSheet extends StatelessWidget {
     switch (rideStatus) {
       case 'accepted':
         statusText = 'Go to Pickup Location';
-        statusColor = Colors.orange;
+        statusColor = AppConstants.primaryColor;
         break;
       case 'arrived':
         statusText = 'Waiting for Passenger';
-        statusColor = Colors.blue;
+        statusColor = AppConstants.primaryColor;
         break;
       case 'started':
         statusText = 'Ride in Progress';
-        statusColor = Colors.green;
+        statusColor = AppConstants.primaryColor;
         break;
       default:
         statusText = 'Unknown Status';
-        statusColor = Colors.grey;
+        statusColor = Colors.black54;
     }
 
     return Container(
@@ -107,7 +108,7 @@ class ActiveRideBottomSheet extends StatelessWidget {
           'Pickup',
           pickupLocation,
           Icons.location_on,
-          Colors.green,
+          AppConstants.primaryColor,
           true,
         ),
         const SizedBox(height: 8),
@@ -115,7 +116,7 @@ class ActiveRideBottomSheet extends StatelessWidget {
           'Drop',
           dropLocation,
           Icons.location_on,
-          Colors.red,
+          AppConstants.primaryColor,
           false,
         ),
       ],
@@ -145,7 +146,7 @@ class ActiveRideBottomSheet extends StatelessWidget {
                   label,
                   style: const TextStyle(
                     fontSize: 12,
-                    color: Colors.grey,
+                    color: Colors.black54,
                   ),
                 ),
                 Text(
@@ -153,6 +154,7 @@ class ActiveRideBottomSheet extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: Colors.black,
                   ),
                 ),
               ],
@@ -163,11 +165,11 @@ class ActiveRideBottomSheet extends StatelessWidget {
               onPressed: () {
                 controller.onPickupLocationTap();
               },
-              icon: const Icon(Icons.directions, color: Colors.blue),
-              label: const Text('Directions'),
+              icon: Icon(Icons.directions, color: AppConstants.primaryColor),
+              label: Text('Directions', style: TextStyle(color: AppConstants.primaryColor)),
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                backgroundColor: Colors.blue.withOpacity(0.1),
+                backgroundColor: AppConstants.primaryColor.withOpacity(0.1),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -186,12 +188,12 @@ class ActiveRideBottomSheet extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.orange.withOpacity(0.1),
+            color: AppConstants.primaryColor.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
-            children: const [
-              Icon(Icons.info_outline, color: Colors.orange, size: 20),
+            children: [
+              Icon(Icons.info_outline, color: AppConstants.primaryColor, size: 20),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -206,7 +208,7 @@ class ActiveRideBottomSheet extends StatelessWidget {
         return ElevatedButton(
           onPressed: onStartRide,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
+            backgroundColor: AppConstants.primaryColor,
             minimumSize: const Size(double.infinity, 48),
           ),
           child: const Text('Start Ride'),
@@ -215,7 +217,7 @@ class ActiveRideBottomSheet extends StatelessWidget {
         return ElevatedButton(
           onPressed: onEndRide,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red,
+            backgroundColor: AppConstants.primaryColor,
             minimumSize: const Size(double.infinity, 48),
           ),
           child: const Text('End Ride'),

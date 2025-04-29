@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path;
+import '../../constants/app_constants.dart';
 
 class ImagePickerWidget extends StatelessWidget {
   final String? imageUrl;
   final XFile? pickedImage;
   final String title;
-  final VoidCallback onPickImage;
+  final Function()? onPickImage;
   final bool enabled;
   final double size;
   final bool isLicenseImage;
@@ -38,6 +39,7 @@ class ImagePickerWidget extends StatelessWidget {
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
+            color: AppConstants.textColor,
           ),
         ),
         const SizedBox(height: 8),
@@ -47,10 +49,10 @@ class ImagePickerWidget extends StatelessWidget {
             width: isLicenseImage ? size * 1.6 : size,
             height: size,
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color: Colors.white,
               borderRadius: BorderRadius.circular(isLicenseImage ? 8 : size / 2),
               border: Border.all(
-                color: Colors.grey[300]!,
+                color: AppConstants.borderColor,
                 width: 1,
               ),
             ),
@@ -63,9 +65,9 @@ class ImagePickerWidget extends StatelessWidget {
             child: Text(
               'Tap to ${imageUrl != null || pickedImage != null ? 'change' : 'upload'}' +
               (supportsPdf ? ' (Image or PDF)' : ''),
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
-                color: Colors.grey[600],
+                color: Colors.black54,
               ),
             ),
           ),
@@ -78,13 +80,13 @@ class ImagePickerWidget extends StatelessWidget {
       return ClipRRect(
         borderRadius: BorderRadius.circular(isLicenseImage ? 8 : size / 2),
         child: Container(
-          color: Colors.grey[200],
+          color: Colors.white,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 Icons.picture_as_pdf,
-                color: Colors.red[700],
+                color: AppConstants.primaryColor,
                 size: size * 0.4,
               ),
               const SizedBox(height: 4),
@@ -93,6 +95,7 @@ class ImagePickerWidget extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
+                  color: AppConstants.textColor,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 1,
@@ -127,7 +130,9 @@ class ImagePickerWidget extends StatelessWidget {
         width: double.infinity,
         height: double.infinity,
         placeholder: (context, url) => const Center(
-          child: CircularProgressIndicator(),
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(AppConstants.primaryColor),
+          ),
         ),
         errorWidget: (context, url, error) => _buildPlaceholder(),
       );
@@ -149,7 +154,7 @@ class ImagePickerWidget extends StatelessWidget {
     return Icon(
       icon,
       size: size / 2,
-      color: Colors.grey[400],
+      color: Colors.black38,
     );
   }
 } 

@@ -60,14 +60,14 @@ class PermissionsScreen extends StatelessWidget {
                       return Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.1),
+                          color: Colors.blue.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(24),
                         ),
                         child: Column(
                           children: [
                             const Icon(
                               Icons.check_circle,
-                              color: Colors.green,
+                              color: Colors.blue,
                               size: 64,
                             ),
                             const SizedBox(height: 24),
@@ -76,7 +76,7 @@ class PermissionsScreen extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.green,
+                                color: Colors.blue,
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -213,12 +213,12 @@ class _PermissionCard extends StatelessWidget {
             : Row(
                 mainAxisSize: MainAxisSize.min,
                 children: const [
-                  Icon(Icons.check_circle, color: Colors.green),
+                  Icon(Icons.check_circle, color: Colors.blue),
                   SizedBox(width: 8),
                   Text(
                     'Access Granted',
                     style: TextStyle(
-                      color: Colors.green,
+                      color: Colors.blue,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

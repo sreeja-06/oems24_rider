@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../models/ride_request.dart';
 import '../../utils/format_util.dart';
+import 'package:get/get.dart';
+import '../../controllers/home_controller.dart';
 
 class PaymentDialog extends StatefulWidget {
   final RideRequest ride;
@@ -161,6 +163,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
+                    // Use the callback to show end ride confirmation dialog
                     widget.onPaymentReceived();
                   },
                   style: ElevatedButton.styleFrom(

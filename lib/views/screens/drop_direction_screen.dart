@@ -4,53 +4,46 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart' as location_marker;
 import '../../controllers/home_controller.dart';
-import '../widgets/otp_verification_dialog.dart';
+import '../widgets/payment_dialog.dart';
 import '../../utils/format_util.dart';
 
-class DirectionsScreen extends StatelessWidget {
+class DropDirectionScreen extends StatelessWidget {
   final HomeController controller = Get.find<HomeController>();
   final mapController = MapController();
 
-  DirectionsScreen({super.key});
+  DropDirectionScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     // Check if ride is still active
-    if (controller.activeRide.value == null || controller.rideStatus.value != 'accepted') {
-      // If ride is not active or not in accepted state, redirect to home
+    if (controller.activeRide.value == null || controller.rideStatus.value != 'started') {
+      // If ride is not active or not in started state, redirect to home
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Get.offAllNamed('/home');
       });
     }
-    
+
     // Handle potentially null or zero values
-    final pickupLocation = controller.activeRide.value?.pickupLocation ?? 'Pickup Location';
+    final dropLocation = controller.activeRide.value?.dropLocation ?? 'Drop Location';
+    final dropLat = controller.activeRide.value?.dropLat ?? controller.currentLocation.value.latitude;
+    final dropLng = controller.activeRide.value?.dropLng ?? controller.currentLocation.value.longitude;
     final pickupLat = controller.activeRide.value?.pickupLat ?? controller.currentLocation.value.latitude;
     final pickupLng = controller.activeRide.value?.pickupLng ?? controller.currentLocation.value.longitude;
     final distanceInKm = controller.activeRide.value?.distanceInKm ?? 0.0;
     final durationInMins = controller.activeRide.value?.estimatedDurationInMins ?? 0;
+    final customerName = controller.activeRide.value?.customerName ?? 'Customer';
     
     // Default values for display
     final displayDistance = distanceInKm <= 0 ? '5.0 km' : '${distanceInKm.toStringAsFixed(1)} km';
     final displayDuration = durationInMins <= 0 ? '15 min' : '$durationInMins min';
     
     return WillPopScope(
-      // Don't allow back button to close this screen without confirming
-      onWillPop: () async {
-        return await _showExitConfirmationDialog(context);
-      },
+      // Prevent back button from closing this screen during an active ride
+      onWillPop: () async => false,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Directions to Pickup'),
-          automaticallyImplyLeading: true, // Show back button but with custom handling
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () async {
-              if (await _showExitConfirmationDialog(context)) {
-                Get.back();
-              }
-            },
-          ),
+          title: const Text('Navigate to Drop'),
+          automaticallyImplyLeading: false, // Hide back button
         ),
         body: Stack(
           children: [
@@ -58,7 +51,7 @@ class DirectionsScreen extends StatelessWidget {
               mapController: mapController,
               options: MapOptions(
                 center: controller.currentLocation.value,
-                zoom: 15.0,
+                zoom: 14.0,
                 onPositionChanged: (MapPosition position, bool hasGesture) {
                   if (!hasGesture) {
                     controller.currentLocation.value = position.center!;
@@ -98,17 +91,41 @@ class DirectionsScreen extends StatelessWidget {
                 ),
                 MarkerLayer(
                   markers: [
-                    if (controller.activeRide.value != null)
-                      Marker(
-                        point: LatLng(pickupLat, pickupLng),
-                        width: 40,
-                        height: 40,
-                        child: const Icon(
-                          Icons.location_on,
-                          color: Colors.blue,
-                          size: 40,
-                        ),
+                    // Show pickup marker (blue)
+                    Marker(
+                      point: LatLng(pickupLat, pickupLng),
+                      width: 40,
+                      height: 40,
+                      child: const Icon(
+                        Icons.location_on,
+                        color: Colors.blue,
+                        size: 40,
                       ),
+                    ),
+                    // Show drop marker (red)
+                    Marker(
+                      point: LatLng(dropLat, dropLng),
+                      width: 40, 
+                      height: 40,
+                      child: const Icon(
+                        Icons.location_on,
+                        color: Colors.red,
+                        size: 40,
+                      ),
+                    ),
+                  ],
+                ),
+                // Draw a polyline between pickup and drop (simplified direct line)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: [
+                        LatLng(pickupLat, pickupLng),
+                        LatLng(dropLat, dropLng),
+                      ],
+                      strokeWidth: 4.0,
+                      color: Colors.blue,
+                    ),
                   ],
                 ),
               ],
@@ -122,9 +139,10 @@ class DirectionsScreen extends StatelessWidget {
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.blue,
                 onPressed: () {
-                  // Center the map between current location and pickup
+                  // Center the map to show both pickup and destination
                   final bounds = LatLngBounds.fromPoints([
                     LatLng(pickupLat, pickupLng),
+                    LatLng(dropLat, dropLng),
                     controller.currentLocation.value,
                   ]);
                   mapController.fitBounds(
@@ -137,27 +155,79 @@ class DirectionsScreen extends StatelessWidget {
                 child: const Icon(Icons.my_location),
               ),
             ),
+            // Bottom ride info card
             Positioned(
               left: 16,
               right: 16,
               bottom: 16,
               child: Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Row(
+                        children: [
+                          const CircleAvatar(
+                            radius: 20,
+                            backgroundColor: Colors.grey,
+                            child: Icon(
+                              Icons.person,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                customerName,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const Text(
+                                'Passenger',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            icon: const Icon(Icons.phone, color: Colors.blue),
+                            onPressed: () {
+                              // Open dialer with customer phone number
+                              // This would typically use url_launcher
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Calling passenger...'),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      const Divider(height: 24),
                       const Text(
-                        'Pickup Location',
+                        'Drop Location',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 4),
                       Text(
-                        pickupLocation,
+                        dropLocation,
                         style: const TextStyle(fontSize: 14),
                       ),
                       const SizedBox(height: 16),
@@ -202,18 +272,48 @@ class DirectionsScreen extends StatelessWidget {
                               ),
                             ],
                           ),
+                          if (controller.activeRide.value != null)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Fare',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                Text(
+                                  FormatUtil.formatCurrency(
+                                    controller.activeRide.value!.estimatedFare,
+                                  ),
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue,
+                                  ),
+                                ),
+                              ],
+                            ),
                         ],
                       ),
                       const SizedBox(height: 24),
                       ElevatedButton(
-                        onPressed: () {
-                          _showArrivedConfirmationDialog(context);
-                        },
+                        onPressed: () => _showReachedDropLocationDialog(context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue,
                           minimumSize: const Size(double.infinity, 48),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                        child: const Text('Arrived at Pickup'),
+                        child: const Text(
+                          'Reached Drop Location',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -225,48 +325,15 @@ class DirectionsScreen extends StatelessWidget {
       ),
     );
   }
-  
-  Future<bool> _showExitConfirmationDialog(BuildContext context) async {
-    bool shouldExit = false;
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Exit Navigation?'),
-          content: const Text('Are you sure you want to exit the navigation? You can return to it from the ride card.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                shouldExit = false;
-              },
-              child: const Text('No'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                shouldExit = true;
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-              ),
-              child: const Text('Yes'),
-            ),
-          ],
-        );
-      },
-    );
-    return shouldExit;
-  }
-  
-  void _showArrivedConfirmationDialog(BuildContext context) {
+
+  void _showReachedDropLocationDialog(BuildContext context) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           title: const Text('Confirm Arrival'),
-          content: const Text('Have you arrived at the pickup location?'),
+          content: const Text('Have you reached the drop location?'),
           actions: [
             TextButton(
               onPressed: () {
@@ -277,10 +344,7 @@ class DirectionsScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
-                // Update ride status to arrived
-                controller.onArrivedAtPickup();
-                // Go back to the home screen to show OTP verification
-                Get.back();
+                _showPaymentDialog(context);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
@@ -290,6 +354,21 @@ class DirectionsScreen extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+
+  void _showPaymentDialog(BuildContext context) {
+    if (controller.activeRide.value == null) return;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => PaymentDialog(
+        ride: controller.activeRide.value!,
+        onPaymentReceived: () {
+          controller.showEndRideConfirmationDialog();
+        },
+      ),
     );
   }
 }

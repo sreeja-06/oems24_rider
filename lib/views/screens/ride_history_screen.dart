@@ -1,17 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/ride_history_controller.dart';
+import '../../constants/app_constants.dart';
 
 class RideHistoryScreen extends StatelessWidget {
   const RideHistoryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(RideHistoryController());
+    // Try to find existing controller first, create one only if not found
+    final RideHistoryController controller;
+    if (Get.isRegistered<RideHistoryController>()) {
+      controller = Get.find<RideHistoryController>();
+      // Refresh data when returning to this screen
+      controller.loadRideHistory();
+    } else {
+      controller = Get.put(RideHistoryController());
+    }
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ride History'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => controller.loadRideHistory(),
+            tooltip: 'Refresh',
+          ),
+        ],
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
@@ -57,7 +73,7 @@ class RideHistoryScreen extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF007BFF),
+                            color: AppConstants.primaryColor,
                           ),
                         ),
                       ],
@@ -86,14 +102,14 @@ class RideHistoryScreen extends StatelessWidget {
                         ),
                         Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.star,
                               size: 18,
-                              color: Colors.amber,
+                              color: AppConstants.primaryColor,
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              ride.rating.toString(),
+                              ride.rating != null ? ride.rating.toString() : "N/A",
                               style: const TextStyle(
                                 color: Colors.black87,
                                 fontWeight: FontWeight.w500,
@@ -119,7 +135,7 @@ class RideHistoryScreen extends StatelessWidget {
         Icon(
           icon,
           size: 20,
-          color: const Color(0xFF007BFF),
+          color: AppConstants.primaryColor,
         ),
         const SizedBox(width: 8),
         Expanded(

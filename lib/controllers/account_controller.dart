@@ -168,8 +168,8 @@ class AccountController extends GetxController {
       'Success',
       'Profile updated successfully',
       snackPosition: SnackPosition.TOP,
-      backgroundColor: Colors.green.withOpacity(0.1),
-      colorText: Colors.green,
+      backgroundColor: Colors.blue.withOpacity(0.1),
+      colorText: Colors.blue,
       duration: const Duration(seconds: 3),
     );
   }

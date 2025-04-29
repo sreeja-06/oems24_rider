@@ -59,9 +59,9 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      bool showAppBar = controller.currentIndex.value != 3 && 
-                        controller.currentIndex.value != 1 && 
-                        controller.currentIndex.value != 2; // Hide AppBar for Account, Ride History, and Dashboard tabs
+      bool showAppBar = controller.currentIndex.value != 3 && // Hide AppBar for Account tab
+                        controller.currentIndex.value != 2 && // Hide AppBar for Dashboard tab  
+                        controller.currentIndex.value != 1;   // Hide AppBar for Rides tab
       
       return Scaffold(
         appBar: showAppBar ? AppBar(
@@ -183,7 +183,7 @@ class HomeScreen extends StatelessWidget {
                       onTap: () => controller.onPickupLocationTap(),
                       child: const Icon(
                         Icons.location_on,
-                        color: Colors.green,
+                        color: Colors.blue,
                         size: 40,
                       ),
                     ),
@@ -235,14 +235,14 @@ class HomeScreen extends StatelessWidget {
                             controller.isOnline.value ? 'Online' : 'Offline',
                             style: TextStyle(
                               color: controller.isOnline.value
-                                  ? Colors.green
+                                  ? Colors.blue
                                   : Colors.grey,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           value: controller.isOnline.value,
                           onChanged: (_) => controller.toggleOnlineStatus(),
-                          activeColor: Colors.green,
+                          activeColor: Colors.blue,
                         ),
                         if (!controller.isOnline.value)
                           const Padding(

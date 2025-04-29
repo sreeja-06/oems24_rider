@@ -16,6 +16,8 @@ class CustomTextField extends StatelessWidget {
   final int? maxLines;
   final bool enabled;
   final TextCapitalization textCapitalization;
+  final int? maxLength;
+  final String? errorText;
 
   const CustomTextField({
     super.key,
@@ -31,7 +33,9 @@ class CustomTextField extends StatelessWidget {
     this.onChanged,
     this.maxLines = 1,
     this.enabled = true,
-    this.textCapitalization = TextCapitalization.none, required int maxLength,
+    this.textCapitalization = TextCapitalization.none,
+    this.maxLength,
+    this.errorText,
   });
 
   @override
@@ -44,11 +48,13 @@ class CustomTextField extends StatelessWidget {
       inputFormatters: inputFormatters,
       onChanged: onChanged,
       maxLines: maxLines,
+      maxLength: maxLength,
       enabled: enabled,
       textCapitalization: textCapitalization,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
+        errorText: errorText,
         prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
         border: OutlineInputBorder(
@@ -56,7 +62,7 @@ class CustomTextField extends StatelessWidget {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+          borderSide: BorderSide(color: AppConstants.borderColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.borderRadius),
@@ -64,10 +70,10 @@ class CustomTextField extends StatelessWidget {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.error),
+          borderSide: BorderSide(color: AppConstants.primaryColor),
         ),
         filled: true,
-        fillColor: enabled ? Colors.white : Colors.grey[100],
+        fillColor: enabled ? Colors.white : AppConstants.disabledColor,
       ),
     );
   }

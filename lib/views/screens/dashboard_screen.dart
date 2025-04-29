@@ -125,13 +125,13 @@ class DashboardScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
+                    color: Colors.blue.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     controller.isOnline.value ? 'Online' : 'Offline',
                     style: TextStyle(
-                      color: controller.isOnline.value ? Colors.green : Colors.grey,
+                      color: controller.isOnline.value ? Colors.blue : Colors.grey,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -167,7 +167,7 @@ class DashboardScreen extends StatelessWidget {
                   Icons.speed,
                   '${controller.totalKm}km',
                   'Distance',
-                  Colors.green,
+                  Colors.blue,
                 ),
                 _buildStatItem(
                   Icons.star,
@@ -535,7 +535,7 @@ class DashboardScreen extends StatelessWidget {
                     controller.formatCurrency(incentive.amount),
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.green,
+                      color: Colors.blue,
                     ),
                   ),
                 );

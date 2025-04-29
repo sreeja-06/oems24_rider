@@ -114,7 +114,7 @@ class _RideRequestDialogState extends State<RideRequestDialog> {
             const SizedBox(height: 16),
             Row(
               children: [
-                const Icon(Icons.location_on, color: Colors.green),
+                const Icon(Icons.location_on, color: Colors.blue),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(

@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 
 class AppConstants {
   // Colors
-  static const primaryColor = Color(0xFF1976D2);
-  static const secondaryColor = Color(0xFF2196F3);
-  static const successColor = Color(0xFF4CAF50);
-  static const warningColor = Color(0xFFFFC107);
-  static const dangerColor = Color(0xFFF44336);
-  static const backgroundColor = Color(0xFFF5F5F5);
+  static const primaryColor = Color(0xFF1976D2); // Blue
+  static const secondaryColor = Color(0xFF2196F3); // Lighter Blue
+  static const textColor = Colors.black;
+  static const backgroundColor = Colors.white;
+  static const disabledColor = Color(0xFFE0E0E0); // Light grey for disabled states
+  static const borderColor = Color(0xFFBDBDBD); // Grey for borders
+  
+  // Danger and success colors changed to blue variants
+  static const successColor = Color(0xFF42A5F5); // Light blue instead of blue
+  static const warningColor = Color(0xFF1976D2); // Blue instead of yellow
+  static const dangerColor = Color(0xFF0D47A1); // Dark blue instead of red
 
   // Dimensions
   static const double defaultMargin = 16.0;
@@ -22,22 +27,26 @@ class AppConstants {
     fontSize: 24,
     fontWeight: FontWeight.bold,
     letterSpacing: 0.15,
+    color: textColor,
   );
 
   static const subtitleStyle = TextStyle(
     fontSize: 18,
     fontWeight: FontWeight.w500,
     letterSpacing: 0.15,
+    color: textColor,
   );
 
   static const bodyStyle = TextStyle(
     fontSize: 16,
     letterSpacing: 0.5,
+    color: textColor,
   );
 
   static const captionStyle = TextStyle(
     fontSize: 12,
     letterSpacing: 0.4,
+    color: textColor,
   );
 
   // Animation Durations

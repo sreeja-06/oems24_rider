@@ -57,6 +57,16 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    
+    // Ensure RideHistoryController and DashboardController are available
+    if (!Get.isRegistered<RideHistoryController>()) {
+      Get.lazyPut(() => RideHistoryController());
+    }
+    
+    if (!Get.isRegistered<DashboardController>()) {
+      Get.lazyPut(() => DashboardController());
+    }
+    
     // Remove automatic location initialization
     ever(isOnline, (bool online) {
       if (online) {
@@ -179,7 +189,7 @@ class HomeController extends GetxController {
       showStandardSnackbar(
         title: 'Status Changed',
         message: isOnline.value ? 'You are now online' : 'You are now offline',
-        backgroundColor: isOnline.value ? Colors.green : Colors.grey[700]!,
+        backgroundColor: isOnline.value ? Colors.blue : Colors.grey[700]!,
         icon: isOnline.value ? Icons.online_prediction : Icons.offline_bolt,
       );
     });
@@ -326,9 +336,12 @@ class HomeController extends GetxController {
     showStandardSnackbar(
       title: 'Ride Started',
       message: 'Navigate to drop location',
-      backgroundColor: Colors.green,
+      backgroundColor: Colors.blue,
       icon: Icons.play_arrow,
     );
+    
+    // Navigate to the drop direction screen
+    Get.toNamed('/drop-direction');
   }
 
   void onEndRide() {
@@ -340,15 +353,192 @@ class HomeController extends GetxController {
       confirmTextColor: Colors.white,
       onConfirm: () {
         Get.back(); // Close dialog
-        _completeRide();
-        // Force UI update by temporarily switching to a different valid index
-        final currentIndex = this.currentIndex.value;
-        this.currentIndex.value = (currentIndex + 1) % 4; // Switch to next tab
-        Future.delayed(const Duration(milliseconds: 50), () {
-          this.currentIndex.value = currentIndex; // Restore original index
-        });
+        
+        // Show payment dialog
+        showDialog(
+          context: Get.context!,
+          barrierDismissible: false,
+          builder: (context) => PaymentDialog(
+            ride: activeRide.value!,
+            onPaymentReceived: () {
+              // Show end ride confirmation dialog
+              showEndRideConfirmationDialog();
+            },
+          ),
+        );
       },
     );
+  }
+
+  // Method to show the end ride confirmation dialog
+  void showEndRideConfirmationDialog() {
+    Get.defaultDialog(
+      title: 'End Ride',
+      content: const Text('The payment has been received. Would you like to end the ride now?'),
+      textConfirm: 'Yes',
+      textCancel: 'No',
+      confirmTextColor: Colors.white,
+      onConfirm: () {
+        Get.back(); // Close dialog
+        forceEndRide(); // Now force end the ride
+      },
+    );
+  }
+
+  // Direct method to force end ride and navigate home
+  void forceEndRide() {
+    if (activeRide.value == null) {
+      print("ERROR: Cannot end null ride");
+      return;
+    }
+
+    print("INFO: Force ending ride and navigating to home");
+    
+    // Create ride history entry
+    final rideHistory = RideHistory(
+      id: activeRide.value!.id,
+      customerName: activeRide.value!.customerName,
+      pickupLocation: activeRide.value!.pickupLocation,
+      dropLocation: activeRide.value!.dropLocation,
+      fare: activeRide.value!.estimatedFare,
+      distance: activeRide.value!.distanceInKm,
+      duration: activeRide.value!.estimatedDurationInMins,
+      completedAt: DateTime.now(),
+    );
+
+    try {
+      // Ensure controllers exist before using them
+      if (!Get.isRegistered<DashboardController>()) {
+        Get.put(DashboardController());
+      }
+      
+      if (!Get.isRegistered<RideHistoryController>()) {
+        Get.put(RideHistoryController());
+      }
+      
+      // Update dashboard with ride completion
+      final dashboardController = Get.find<DashboardController>();
+      dashboardController.handleRideCompletion(activeRide.value!);
+
+      // Update ride history
+      final rideHistoryController = Get.find<RideHistoryController>();
+      rideHistoryController.addRide(rideHistory);
+      
+      print("INFO: Successfully added ride to history");
+    } catch (e) {
+      print("ERROR: Failed to update ride history: $e");
+    }
+    
+    // Show ride summary
+    showStandardSnackbar(
+      title: 'Ride Completed',
+      message: 'Fare: ₹${activeRide.value!.estimatedFare.toStringAsFixed(2)}',
+      backgroundColor: Colors.blue,
+      duration: const Duration(seconds: 5),
+      icon: Icons.check_circle,
+    );
+    
+    // Reset all states
+    rideStatus.value = 'none';
+    activeRide.value = null;
+    rideOtp.value = '';
+    
+    // Cancel timers
+    otpTimer?.cancel();
+    requestTimer?.cancel();
+    
+    // Update UI
+    update();
+    
+    // Navigate home after a short delay
+    Future.delayed(const Duration(milliseconds: 300), () {
+      Get.offAllNamed('/home');
+    });
+  }
+
+  // New method for direct ride completion without showing dialog
+  void completeRideDirectly() {
+    print("DEBUGGING: completeRideDirectly called");
+    
+    if (activeRide.value == null) {
+      print("DEBUGGING: activeRide is null, returning");
+      return;
+    }
+
+    // Create ride history entry
+    print("DEBUGGING: Creating ride history entry");
+    final rideHistory = RideHistory(
+      id: activeRide.value!.id,
+      customerName: activeRide.value!.customerName,
+      pickupLocation: activeRide.value!.pickupLocation,
+      dropLocation: activeRide.value!.dropLocation,
+      fare: activeRide.value!.estimatedFare,
+      distance: activeRide.value!.distanceInKm,
+      duration: activeRide.value!.estimatedDurationInMins,
+      completedAt: DateTime.now(),
+    );
+
+    try {
+      // Ensure controllers exist before using them
+      if (!Get.isRegistered<DashboardController>()) {
+        Get.put(DashboardController());
+      }
+      
+      if (!Get.isRegistered<RideHistoryController>()) {
+        Get.put(RideHistoryController());
+      }
+      
+      // Update dashboard with ride completion
+      print("DEBUGGING: Updating dashboard");
+      final dashboardController = Get.find<DashboardController>();
+      dashboardController.handleRideCompletion(activeRide.value!);
+
+      // Update ride history
+      print("DEBUGGING: Updating ride history");
+      final rideHistoryController = Get.find<RideHistoryController>();
+      rideHistoryController.addRide(rideHistory);
+      
+      print("DEBUGGING: Successfully added ride to history");
+    } catch (e) {
+      print("DEBUGGING: Error updating controllers: $e");
+    }
+    
+    // Show ride summary
+    print("DEBUGGING: Showing snackbar");
+    showStandardSnackbar(
+      title: 'Ride Completed',
+      message: 'Fare: ₹${activeRide.value!.estimatedFare.toStringAsFixed(2)}',
+      backgroundColor: Colors.blue,
+      duration: const Duration(seconds: 5),
+      icon: Icons.check_circle,
+    );
+
+    print("DEBUGGING: Resetting ride state");
+    // Make a local copy before resetting
+    final RideRequest? localCopy = activeRide.value;
+    
+    // Reset all states to initial values
+    rideStatus.value = 'none';
+    activeRide.value = null;
+    rideOtp.value = '';
+    
+    // Cancel any active timers
+    print("DEBUGGING: Cancelling timers");
+    otpTimer?.cancel();
+    requestTimer?.cancel();
+
+    // Force UI update
+    print("DEBUGGING: Forcing UI update");
+    update();
+
+    // Use Future.delayed to ensure state is updated before navigation
+    print("DEBUGGING: Navigating to home screen after delay");
+    Future.delayed(const Duration(milliseconds: 100), () {
+      print("DEBUGGING: Now navigating to home");
+      Get.offAllNamed('/home')!
+        .then((_) => print("DEBUGGING: Navigation completed"))
+        .catchError((error) => print("DEBUGGING: Navigation error: $error"));
+    });
   }
 
   void _completeRide() {
@@ -364,49 +554,8 @@ class HomeController extends GetxController {
       builder: (context) => PaymentDialog(
         ride: activeRide.value!,
         onPaymentReceived: () {
-          // Create ride history entry
-          final rideHistory = RideHistory(
-            id: activeRide.value!.id,
-            customerName: activeRide.value!.customerName,
-            pickupLocation: activeRide.value!.pickupLocation,
-            dropLocation: activeRide.value!.dropLocation,
-            fare: activeRide.value!.estimatedFare,
-            distance: activeRide.value!.distanceInKm,
-            duration: activeRide.value!.estimatedDurationInMins,
-            completedAt: DateTime.now(),
-          );
-
-          // Update dashboard with ride completion
-          final dashboardController = Get.find<DashboardController>();
-          dashboardController.handleRideCompletion(activeRide.value!);
-
-          // Update ride history
-          final rideHistoryController = Get.find<RideHistoryController>();
-          rideHistoryController.addRide(rideHistory);
-    
-          // Show ride summary
-          showStandardSnackbar(
-            title: 'Ride Completed',
-            message: 'Fare: ₹${activeRide.value!.estimatedFare.toStringAsFixed(2)}',
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 5),
-            icon: Icons.check_circle,
-          );
-
-          // Reset all states to initial values
-          activeRide.value = null;
-          rideStatus.value = 'none';
-          rideOtp.value = '';
-          
-          // Cancel any active timers
-          otpTimer?.cancel();
-          requestTimer?.cancel();
-
-          // Force UI update
-          update();
-
-          // Close any open dialogs
-          Get.back(closeOverlays: true);
+          // Use completeRideDirectly for consistent navigation logic
+          completeRideDirectly();
         },
       ),
     );

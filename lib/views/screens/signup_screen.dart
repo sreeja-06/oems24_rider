@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/signup_controller.dart';
-import '../../widgets/custom_text_field.dart';
-import '../../widgets/custom_button.dart';
-import '../../widgets/image_picker_widget.dart';
+import '../widgets/custom_text_field.dart';
+import '../widgets/custom_button.dart';
+import '../widgets/image_picker_widget.dart';
+import '../../constants/app_constants.dart';
 
 class SignupScreen extends GetView<SignupController> {
   const SignupScreen({super.key});
@@ -29,14 +30,14 @@ class SignupScreen extends GetView<SignupController> {
               label: 'Full Name',
               onChanged: (value) => controller.name.value = value,
               validator: controller.validateName,
-              errorText: controller.validateName(controller.name.value),
+              errorText: controller.name.value.isNotEmpty ? controller.validateName(controller.name.value) : null,
             )),
             const SizedBox(height: 16),
             Obx(() => CustomTextField(
               label: 'Phone Number',
               onChanged: (value) => controller.phone.value = value,
               validator: controller.validatePhone,
-              errorText: controller.validatePhone(controller.phone.value),
+              errorText: controller.phone.value.isNotEmpty ? controller.validatePhone(controller.phone.value) : null,
               keyboardType: TextInputType.phone,
             )),
             const SizedBox(height: 16),
@@ -44,7 +45,7 @@ class SignupScreen extends GetView<SignupController> {
               label: 'Email',
               onChanged: (value) => controller.email.value = value,
               validator: controller.validateEmail,
-              errorText: controller.validateEmail(controller.email.value),
+              errorText: controller.email.value.isNotEmpty ? controller.validateEmail(controller.email.value) : null,
               keyboardType: TextInputType.emailAddress,
             )),
             const SizedBox(height: 16),
@@ -56,6 +57,7 @@ class SignupScreen extends GetView<SignupController> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
+                    color: AppConstants.textColor,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -66,36 +68,42 @@ class SignupScreen extends GetView<SignupController> {
                       value: 'bike',
                       groupValue: controller.vehicleType.value,
                       onChanged: (value) => controller.vehicleType.value = value!,
+                      activeColor: AppConstants.primaryColor,
                     ),
                     RadioListTile<String>(
                       title: const Text('E-Bike'),
                       value: 'e-bike',
                       groupValue: controller.vehicleType.value,
                       onChanged: (value) => controller.vehicleType.value = value!,
+                      activeColor: AppConstants.primaryColor,
                     ),
                     RadioListTile<String>(
                       title: const Text('Cab'),
                       value: 'cab',
                       groupValue: controller.vehicleType.value,
                       onChanged: (value) => controller.vehicleType.value = value!,
+                      activeColor: AppConstants.primaryColor,
                     ),
                     RadioListTile<String>(
                       title: const Text('Premium Cab'),
                       value: 'premium cab',
                       groupValue: controller.vehicleType.value,
                       onChanged: (value) => controller.vehicleType.value = value!,
+                      activeColor: AppConstants.primaryColor,
                     ),
                     RadioListTile<String>(
                       title: const Text('Shuttle'),
                       value: 'shuttle',
                       groupValue: controller.vehicleType.value,
                       onChanged: (value) => controller.vehicleType.value = value!,
+                      activeColor: AppConstants.primaryColor,
                     ),
                     RadioListTile<String>(
                       title: const Text('Ambulance'),
                       value: 'ambulance',
                       groupValue: controller.vehicleType.value,
                       onChanged: (value) => controller.vehicleType.value = value!,
+                      activeColor: AppConstants.primaryColor,
                     ),
                   ],
                 )),
@@ -106,7 +114,8 @@ class SignupScreen extends GetView<SignupController> {
               label: 'Vehicle Number',
               onChanged: (value) => controller.vehicleNumber.value = value,
               validator: controller.validateVehicleNumber,
-              errorText: controller.validateVehicleNumber(controller.vehicleNumber.value),
+              errorText: controller.vehicleNumber.value.isNotEmpty ? 
+                controller.validateVehicleNumber(controller.vehicleNumber.value) : null,
             )),
             const SizedBox(height: 16),
             Obx(() => Visibility(
@@ -128,7 +137,8 @@ class SignupScreen extends GetView<SignupController> {
               label: 'License Number',
               onChanged: (value) => controller.licenseNumber.value = value,
               validator: controller.validateLicenseNumber,
-              errorText: controller.validateLicenseNumber(controller.licenseNumber.value),
+              errorText: controller.licenseNumber.value.isNotEmpty ? 
+                controller.validateLicenseNumber(controller.licenseNumber.value) : null,
             )),
             const SizedBox(height: 16),
             Obx(() => ImagePickerWidget(
@@ -143,7 +153,8 @@ class SignupScreen extends GetView<SignupController> {
               label: 'Password',
               onChanged: (value) => controller.password.value = value,
               validator: controller.validatePassword,
-              errorText: controller.validatePassword(controller.password.value),
+              errorText: controller.password.value.isNotEmpty ? 
+                controller.validatePassword(controller.password.value) : null,
               obscureText: true,
             )),
             const SizedBox(height: 16),
@@ -151,7 +162,8 @@ class SignupScreen extends GetView<SignupController> {
               label: 'Confirm Password',
               onChanged: (value) => controller.confirmPassword.value = value,
               validator: controller.validateConfirmPassword,
-              errorText: controller.validateConfirmPassword(controller.confirmPassword.value),
+              errorText: controller.confirmPassword.value.isNotEmpty ? 
+                controller.validateConfirmPassword(controller.confirmPassword.value) : null,
               obscureText: true,
             )),
             const SizedBox(height: 24),
@@ -169,7 +181,7 @@ class SignupScreen extends GetView<SignupController> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('Already have an account?'),
+                const Text('Already have an account?', style: TextStyle(color: AppConstants.textColor)),
                 TextButton(
                   onPressed: () => Get.offNamed('/login'),
                   child: const Text('Login'),
@@ -182,8 +194,8 @@ class SignupScreen extends GetView<SignupController> {
                   padding: const EdgeInsets.only(top: 16),
                   child: Text(
                     controller.error.value,
-                    style: const TextStyle(
-                      color: Colors.red,
+                    style: TextStyle(
+                      color: AppConstants.primaryColor,
                       fontSize: 14,
                     ),
                     textAlign: TextAlign.center,

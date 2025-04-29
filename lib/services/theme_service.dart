@@ -9,6 +9,14 @@ class ThemeService extends GetxService {
       seedColor: AppConstants.primaryColor,
       primary: AppConstants.primaryColor,
       secondary: AppConstants.secondaryColor,
+      background: Colors.white,
+      surface: Colors.white,
+      onPrimary: Colors.white,
+      onSecondary: Colors.white,
+      onBackground: Colors.black,
+      onSurface: Colors.black,
+      error: AppConstants.primaryColor,
+      onError: Colors.white,
     ),
     scaffoldBackgroundColor: Colors.white,
     appBarTheme: const AppBarTheme(
@@ -21,6 +29,11 @@ class ThemeService extends GetxService {
         fontSize: 20,
         fontWeight: FontWeight.bold,
       ),
+    ),
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: Colors.white,
+      selectedItemColor: AppConstants.primaryColor,
+      unselectedItemColor: Colors.black54,
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -54,7 +67,7 @@ class ThemeService extends GetxService {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.defaultRadius),
-        borderSide: const BorderSide(color: Colors.grey),
+        borderSide: const BorderSide(color: AppConstants.borderColor),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.defaultRadius),
@@ -62,15 +75,21 @@ class ThemeService extends GetxService {
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.defaultRadius),
-        borderSide: const BorderSide(color: AppConstants.dangerColor),
+        borderSide: const BorderSide(color: AppConstants.primaryColor),
       ),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: AppConstants.defaultPadding,
         vertical: AppConstants.defaultPadding,
       ),
+      fillColor: Colors.white,
+      filled: true,
+      hintStyle: const TextStyle(color: Colors.black38),
+      labelStyle: const TextStyle(color: Colors.black87),
+      errorStyle: const TextStyle(color: AppConstants.primaryColor),
     ),
     cardTheme: CardTheme(
       elevation: 2,
+      color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppConstants.defaultRadius),
       ),
@@ -78,11 +97,45 @@ class ThemeService extends GetxService {
     ),
     snackBarTheme: const SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
+      backgroundColor: AppConstants.primaryColor,
+      contentTextStyle: TextStyle(color: Colors.white),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.all(
           Radius.circular(AppConstants.defaultRadius),
         ),
       ),
+    ),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: AppConstants.primaryColor,
+      circularTrackColor: Colors.white,
+      linearTrackColor: Colors.white,
+    ),
+    dialogTheme: DialogTheme(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppConstants.defaultRadius),
+      ),
+    ),
+    dividerTheme: const DividerThemeData(
+      color: Colors.black12,
+      thickness: 1,
+    ),
+    textTheme: const TextTheme(
+      displayLarge: TextStyle(color: Colors.black),
+      displayMedium: TextStyle(color: Colors.black),
+      displaySmall: TextStyle(color: Colors.black),
+      headlineLarge: TextStyle(color: Colors.black),
+      headlineMedium: TextStyle(color: Colors.black),
+      headlineSmall: TextStyle(color: Colors.black),
+      titleLarge: TextStyle(color: Colors.black),
+      titleMedium: TextStyle(color: Colors.black),
+      titleSmall: TextStyle(color: Colors.black),
+      bodyLarge: TextStyle(color: Colors.black),
+      bodyMedium: TextStyle(color: Colors.black),
+      bodySmall: TextStyle(color: Colors.black),
+      labelLarge: TextStyle(color: Colors.black),
+      labelMedium: TextStyle(color: Colors.black),
+      labelSmall: TextStyle(color: Colors.black),
     ),
   );
 }

@@ -20,7 +20,7 @@ class LoadingOverlay extends StatelessWidget {
         child,
         if (isLoading)
           Container(
-            color: Colors.black54,
+            color: Colors.white.withOpacity(0.8),
             child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -33,8 +33,9 @@ class LoadingOverlay extends StatelessWidget {
                     Text(
                       message!,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppConstants.primaryColor,
                         fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
