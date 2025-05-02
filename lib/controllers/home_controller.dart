@@ -10,6 +10,10 @@ import '../views/screens/directions_screen.dart';
 import '../views/widgets/ride_request_dialog.dart';
 import '../views/widgets/otp_verification_dialog.dart';
 import '../views/widgets/payment_dialog.dart';
+import '../views/widgets/message_passenger_dialog.dart';
+import '../views/widgets/passenger_rating_dialog.dart';
+import '../services/messaging_service.dart';
+import '../services/phone_service.dart';
 import 'dashboard_controller.dart';
 import 'ride_history_controller.dart';
 
@@ -65,6 +69,16 @@ class HomeController extends GetxController {
     
     if (!Get.isRegistered<DashboardController>()) {
       Get.lazyPut(() => DashboardController());
+    }
+
+    // Initialize MessagingService
+    if (!Get.isRegistered<MessagingService>()) {
+      Get.lazyPut(() => MessagingService());
+    }
+
+    // Initialize PhoneService
+    if (!Get.isRegistered<PhoneService>()) {
+      Get.lazyPut(() => PhoneService());
     }
     
     // Remove automatic location initialization
@@ -353,22 +367,45 @@ class HomeController extends GetxController {
       confirmTextColor: Colors.white,
       onConfirm: () {
         Get.back(); // Close dialog
-        
-        // Show payment dialog
-        showDialog(
-          context: Get.context!,
-          barrierDismissible: false,
-          builder: (context) => PaymentDialog(
-            ride: activeRide.value!,
-            onPaymentReceived: () {
-              // Show end ride confirmation dialog
-              showEndRideConfirmationDialog();
-            },
-          ),
-        );
+        _showRatingDialog();
       },
     );
   }
+
+  void _showRatingDialog() {
+    if (activeRide.value == null) return;
+
+    Get.dialog(
+      PassengerRatingDialog(
+        passengerName: activeRide.value!.customerName,
+        onSubmit: (rating, feedback) async {
+          // Store rating and feedback for ride completion
+          _tempRating = rating;
+          _tempFeedback = feedback;
+          
+          // Close rating dialog
+          Get.back();
+          
+          // Show payment dialog
+          showDialog(
+            context: Get.context!,
+            barrierDismissible: false,
+            builder: (context) => PaymentDialog(
+              ride: activeRide.value!,
+              onPaymentReceived: () {
+                showEndRideConfirmationDialog();
+              },
+            ),
+          );
+        },
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  // Temporary storage for rating data
+  double? _tempRating;
+  String? _tempFeedback;
 
   // Method to show the end ride confirmation dialog
   void showEndRideConfirmationDialog() {
@@ -394,7 +431,7 @@ class HomeController extends GetxController {
 
     print("INFO: Force ending ride and navigating to home");
     
-    // Create ride history entry
+    // Create ride history entry with rating
     final rideHistory = RideHistory(
       id: activeRide.value!.id,
       customerName: activeRide.value!.customerName,
@@ -404,6 +441,8 @@ class HomeController extends GetxController {
       distance: activeRide.value!.distanceInKm,
       duration: activeRide.value!.estimatedDurationInMins,
       completedAt: DateTime.now(),
+      passengerRating: _tempRating,
+      passengerFeedback: _tempFeedback,
     );
 
     try {
@@ -424,15 +463,15 @@ class HomeController extends GetxController {
       final rideHistoryController = Get.find<RideHistoryController>();
       rideHistoryController.addRide(rideHistory);
       
-      print("INFO: Successfully added ride to history");
+      print("INFO: Successfully added ride to history with rating: ${_tempRating ?? 'N/A'}");
     } catch (e) {
       print("ERROR: Failed to update ride history: $e");
     }
     
-    // Show ride summary
+    // Show ride summary with rating
     showStandardSnackbar(
       title: 'Ride Completed',
-      message: 'Fare: ₹${activeRide.value!.estimatedFare.toStringAsFixed(2)}',
+      message: 'Fare: ₹${activeRide.value!.estimatedFare.toStringAsFixed(2)}${_tempRating != null ? ' • Rating: ${_tempRating!.toStringAsFixed(1)}★' : ''}',
       backgroundColor: Colors.blue,
       duration: const Duration(seconds: 5),
       icon: Icons.check_circle,
@@ -442,6 +481,8 @@ class HomeController extends GetxController {
     rideStatus.value = 'none';
     activeRide.value = null;
     rideOtp.value = '';
+    _tempRating = null;
+    _tempFeedback = null;
     
     // Cancel timers
     otpTimer?.cancel();
@@ -573,6 +614,30 @@ class HomeController extends GetxController {
     rideStatus.value = 'none';
     rideOtp.value = '';
     otpTimer?.cancel();
+  }
+
+  void showMessagePassengerDialog() {
+    if (activeRide.value == null) return;
+
+    Get.dialog(
+      MessagePassengerDialog(
+        rideId: activeRide.value!.id,
+        passengerName: activeRide.value!.customerName,
+      ),
+    );
+  }
+
+  Future<void> callPassenger() async {
+    if (activeRide.value == null) return;
+
+    final phoneService = Get.find<PhoneService>();
+    await phoneService.callPhoneNumber(activeRide.value!.customerPhone);
+  }
+
+  // Public method to set rating data
+  void setRatingData(double rating, String feedback) {
+    _tempRating = rating;
+    _tempFeedback = feedback;
   }
 
   @override

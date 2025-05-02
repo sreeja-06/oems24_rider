@@ -109,7 +109,9 @@ class RideHistoryScreen extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              ride.rating != null ? ride.rating.toString() : "N/A",
+                              ride.passengerRating != null 
+                                  ? ride.passengerRating!.toStringAsFixed(1) 
+                                  : "N/A",
                               style: const TextStyle(
                                 color: Colors.black87,
                                 fontWeight: FontWeight.w500,

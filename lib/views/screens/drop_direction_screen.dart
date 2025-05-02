@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart' as location_marker;
 import '../../controllers/home_controller.dart';
 import '../widgets/payment_dialog.dart';
+import '../widgets/passenger_rating_dialog.dart';
 import '../../utils/format_util.dart';
 
 class DropDirectionScreen extends StatelessWidget {
@@ -38,12 +39,21 @@ class DropDirectionScreen extends StatelessWidget {
     final displayDuration = durationInMins <= 0 ? '15 min' : '$durationInMins min';
     
     return WillPopScope(
-      // Prevent back button from closing this screen during an active ride
-      onWillPop: () async => false,
+      onWillPop: () async {
+        return await _showExitConfirmationDialog(context);
+      },
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Navigate to Drop'),
-          automaticallyImplyLeading: false, // Hide back button
+          automaticallyImplyLeading: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () async {
+              if (await _showExitConfirmationDialog(context)) {
+                Get.back();
+              }
+            },
+          ),
         ),
         body: Stack(
           children: [
@@ -51,7 +61,7 @@ class DropDirectionScreen extends StatelessWidget {
               mapController: mapController,
               options: MapOptions(
                 center: controller.currentLocation.value,
-                zoom: 14.0,
+                zoom: 15.0,
                 onPositionChanged: (MapPosition position, bool hasGesture) {
                   if (!hasGesture) {
                     controller.currentLocation.value = position.center!;
@@ -172,63 +182,62 @@ class DropDirectionScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const CircleAvatar(
-                            radius: 20,
-                            backgroundColor: Colors.grey,
-                            child: Icon(
-                              Icons.person,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                customerName,
-                                style: const TextStyle(
+                              const Text(
+                                'Drop Location',
+                                style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const Text(
-                                'Passenger',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
+                              const SizedBox(height: 4),
+                              Text(
+                                dropLocation,
+                                style: const TextStyle(fontSize: 14),
                               ),
                             ],
                           ),
-                          const Spacer(),
-                          IconButton(
-                            icon: const Icon(Icons.phone, color: Colors.blue),
-                            onPressed: () {
-                              // Open dialer with customer phone number
-                              // This would typically use url_launcher
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Calling passenger...'),
-                                  duration: Duration(seconds: 2),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                customerName,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
                                 ),
-                              );
-                            },
+                              ),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    onPressed: () => controller.callPassenger(),
+                                    icon: const Icon(Icons.phone, size: 20),
+                                    tooltip: 'Call Passenger',
+                                    color: Colors.blue,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 36,
+                                      minHeight: 36,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed: () => controller.showMessagePassengerDialog(),
+                                    icon: const Icon(Icons.message, size: 20),
+                                    tooltip: 'Message Passenger',
+                                    color: Colors.blue,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 36,
+                                      minHeight: 36,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ],
-                      ),
-                      const Divider(height: 24),
-                      const Text(
-                        'Drop Location',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        dropLocation,
-                        style: const TextStyle(fontSize: 14),
                       ),
                       const SizedBox(height: 16),
                       Row(
@@ -272,48 +281,16 @@ class DropDirectionScreen extends StatelessWidget {
                               ),
                             ],
                           ),
-                          if (controller.activeRide.value != null)
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Fare',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                Text(
-                                  FormatUtil.formatCurrency(
-                                    controller.activeRide.value!.estimatedFare,
-                                  ),
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.blue,
-                                  ),
-                                ),
-                              ],
-                            ),
                         ],
                       ),
                       const SizedBox(height: 24),
                       ElevatedButton(
-                        onPressed: () => _showReachedDropLocationDialog(context),
+                        onPressed: () => _showEndRideDialog(context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue,
                           minimumSize: const Size(double.infinity, 48),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
                         ),
-                        child: const Text(
-                          'Reached Drop Location',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: const Text('End Ride'),
                       ),
                     ],
                   ),
@@ -326,14 +303,47 @@ class DropDirectionScreen extends StatelessWidget {
     );
   }
 
-  void _showReachedDropLocationDialog(BuildContext context) {
+  Future<bool> _showExitConfirmationDialog(BuildContext context) async {
+    bool shouldExit = false;
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Exit Navigation?'),
+          content: const Text('Are you sure you want to exit the navigation? You can return to it from the ride card.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                shouldExit = false;
+              },
+              child: const Text('No'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                shouldExit = true;
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              child: const Text('Yes'),
+            ),
+          ],
+        );
+      },
+    );
+    return shouldExit;
+  }
+
+  void _showEndRideDialog(BuildContext context) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Confirm Arrival'),
-          content: const Text('Have you reached the drop location?'),
+          title: const Text('End Ride'),
+          content: const Text('Have you arrived at the drop location?'),
           actions: [
             TextButton(
               onPressed: () {
@@ -344,7 +354,7 @@ class DropDirectionScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
-                _showPaymentDialog(context);
+                _showRatingDialog(context);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
@@ -357,18 +367,33 @@ class DropDirectionScreen extends StatelessWidget {
     );
   }
 
-  void _showPaymentDialog(BuildContext context) {
+  void _showRatingDialog(BuildContext context) {
     if (controller.activeRide.value == null) return;
-    
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => PaymentDialog(
-        ride: controller.activeRide.value!,
-        onPaymentReceived: () {
-          controller.showEndRideConfirmationDialog();
+
+    Get.dialog(
+      PassengerRatingDialog(
+        passengerName: controller.activeRide.value!.customerName,
+        onSubmit: (rating, feedback) async {
+          // Store rating and feedback for ride completion
+          controller.setRatingData(rating, feedback);
+          
+          // Close rating dialog
+          Get.back();
+          
+          // Show payment dialog
+          showDialog(
+            context: Get.context!,
+            barrierDismissible: false,
+            builder: (context) => PaymentDialog(
+              ride: controller.activeRide.value!,
+              onPaymentReceived: () {
+                controller.showEndRideConfirmationDialog();
+              },
+            ),
+          );
         },
       ),
+      barrierDismissible: false,
     );
   }
 }

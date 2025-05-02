@@ -8,7 +8,8 @@ class RideHistory {
   final int duration;
   final DateTime completedAt;
   final String status;
-  final double? rating;
+  final double? passengerRating;
+  final String? passengerFeedback;
 
   RideHistory({
     required this.id,
@@ -20,7 +21,8 @@ class RideHistory {
     required this.duration,
     required this.completedAt,
     this.status = 'completed',
-    this.rating,
+    this.passengerRating,
+    this.passengerFeedback,
   });
 
   // Convert datetime to readable format

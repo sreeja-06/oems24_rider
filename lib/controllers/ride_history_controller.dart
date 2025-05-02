@@ -33,7 +33,8 @@ class RideHistoryController extends GetxController {
             distance: 5.2,
             duration: 15,
             completedAt: DateTime.now().subtract(const Duration(days: 1)),
-            rating: 4.5,
+            passengerRating: 4.5,
+            passengerFeedback: 'Great passenger, very punctual!',
           ),
         ];
       }

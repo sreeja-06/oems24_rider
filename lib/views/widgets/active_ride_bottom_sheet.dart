@@ -45,7 +45,45 @@ class ActiveRideBottomSheet extends StatelessWidget {
           const SizedBox(height: 16),
           _buildLocationInfo(),
           const SizedBox(height: 16),
-          _buildActionButton(),
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionButton(),
+              ),
+              if (rideStatus == 'accepted' || rideStatus == 'started') ...[
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: IconButton(
+                    onPressed: () {
+                      final controller = Get.find<HomeController>();
+                      controller.callPassenger();
+                    },
+                    icon: const Icon(Icons.phone),
+                    tooltip: 'Call Passenger',
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppConstants.primaryColor.withOpacity(0.1),
+                      foregroundColor: AppConstants.primaryColor,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: IconButton(
+                    onPressed: () {
+                      final controller = Get.find<HomeController>();
+                      controller.showMessagePassengerDialog();
+                    },
+                    icon: const Icon(Icons.message),
+                    tooltip: 'Message Passenger',
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppConstants.primaryColor.withOpacity(0.1),
+                      foregroundColor: AppConstants.primaryColor,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
           const SizedBox(height: 8),
           Text(
             '${FormatUtil.formatDistance(distanceInKm)} • ${FormatUtil.formatDuration(durationInMins * 60)}',
